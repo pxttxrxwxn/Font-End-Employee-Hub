@@ -40,12 +40,13 @@ export default function Index() {
               </div>
             </div>
         </form>
+        <Link href="/HRManagement/Profile">
           <button
             type="submit"
             className="mt-8 w-fit px-15 bg-[#D87031] text-white py-4 rounded-full font-bold hover:bg-[#7a5c4d] transition text-3xl"
           >
             Sign in
-          </button>
+          </button></Link>
         </div>
       </div>
     </div>
