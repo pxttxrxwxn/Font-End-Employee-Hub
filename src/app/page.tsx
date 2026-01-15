@@ -39,11 +39,14 @@ export default function Index() {
                 />
               </div>
             </div>
+            <div className="w-full flex justify-end">
+              <p className="text-white underline text-xs cursor-pointer">Forgot your password?</p>
+            </div>
         </form>
         <Link href="/HRManagement/Profile">
           <button
             type="submit"
-            className="mt-8 w-fit px-15 bg-[#D87031] text-white py-4 rounded-full font-bold hover:bg-[#7a5c4d] transition text-3xl"
+            className="cursor-pointer mt-8 w-fit px-15 bg-[#D87031] text-white py-4 rounded-full font-bold hover:bg-[#7a5c4d] transition text-3xl"
           >
             Sign in
           </button></Link>

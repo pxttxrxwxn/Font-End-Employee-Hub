@@ -34,7 +34,7 @@ export default function Sidebar() {
         </div>
         <div className="flex flex-col px-4 py-5">
           <h1 className="text-lg font-semibold">Employee Hub</h1>
-          <p className="text-xs text-gray-400">HR Management</p>
+          <p className="text-xs text-gray-400 font-[montserrat]">HR Management</p>
         </div>
       </div>
 
@@ -50,7 +50,7 @@ export default function Sidebar() {
               <Icon size={24} className="text-white" />
               <div className="leading-tight">
                 <p className="text-xl font-[Prompt]">{m.label}</p>
-                <p className="text-xs text-gray-400">{m.sub}</p>
+                <p className="text-xs text-gray-400 font-[montserrat]">{m.sub}</p>
               </div>
             </div>
           );
@@ -64,7 +64,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-[Prompt]">สมชาย ใจดี</p>
-            <p className="text-xs text-gray-400">HR Manager</p>
+            <p className="text-xs text-gray-400 font-[montserrat]">HR Manager</p>
           </div>
           <LogOut size={18} className="text-gray-400 cursor-pointer" />
         </div>
