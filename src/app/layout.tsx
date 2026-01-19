@@ -1,11 +1,32 @@
-// src/app/layout.tsx
-import './globals.css'
-import Sidebar from '@/components/Sidebar'
-import type { Metadata } from 'next'
+import type { Metadata } from "next"
+import { Geist, Geist_Mono, Montserrat, Prompt } from "next/font/google"
+import "./globals.css"
+import Sidebar from "@/components/Sidebar"
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+})
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+})
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+})
+
+const prompt = Prompt({
+  variable: "--font-prompt",
+  subsets: ["thai", "latin"],
+  weight: ["400", "500", "700"],
+})
 
 export const metadata: Metadata = {
-  title: 'Employee Hub',
-  description: 'HR Management System',
+  title: "Employee Hub",
+  description: "HR Management System",
 }
 
 export default function RootLayout({
@@ -15,21 +36,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <head>
-        <link
-          href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
-          rel="stylesheet"
-        />
-      </head>
+      <body
+        className={`
+          ${geistSans.variable}
+          ${geistMono.variable}
+          ${montserrat.variable}
+          ${prompt.variable}
+          font-prompt
+          antialiased
+          bg-gray-100
+        `}
+      >
+        
 
-
-
-      <body className="flex h-screen overflow-hidden bg-gray-500">
-        <Sidebar />
-
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+          {/* Main content */}
+          <main className="flex-1 overflow-y-auto p-10 bg-white">
+            {children}
+          </main>
+        
       </body>
     </html>
   )
