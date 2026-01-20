@@ -1,172 +1,92 @@
-import { Bell, Pencil, Mail, Phone, Building2, Calendar } from "lucide-react"
+import Image from "next/image";
+import Link from "next/link";
 
-export default function ProfilePage() {
+export default function Index() {
   return (
-    <div className="space-y-10">
-      {/* ================= HEADER ================= */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-orange-500">
-          โปรไฟล์พนักงาน
-        </h1>
-
-        <Bell className="w-6 h-6 text-gray-500" />
+    <div className="min-h-screen  flex items-center justify-between font-montserrat bg-white">
+      <div className="flex flex-col items-left justify-center h-screen ml-[3%] mr-[3%]">
+        <Image
+        src="/images/LOGO Employee Hub-Photoroom 1.png" alt="Logo"
+        width={704.29} height={606} />
       </div>
-
-      {/* ================= CONTENT ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* ========== LEFT PROFILE ========== */}
-        <div className="flex flex-col items-center text-center">
-          {/* Avatar */}
-          <div className="w-40 h-40 rounded-full bg-gray-300 flex items-center justify-center text-7xl font-bold text-white mb-6">
-            ส
-          </div>
-
-          {/* Name */}
-          <div className="text-3xl font-bold">
-            สมชาย ใจดี
-          </div>
-
-          {/* Position */}
-          <div className="text-gray-500 text-lg">
-            HR Manager
-          </div>
-
-          {/* Status */}
-          <span className="mt-2 px-6 py-1 text-sm rounded-full bg-green-100 text-green-600">
-            Active
-          </span>
-
-          {/* Info */}
-          <div className="mt-8 space-y-4 text-gray-600 w-full max-w-xs text-left">
-            <InfoRow icon={<Mail />} text="somchai@company.com" />
-            <InfoRow icon={<Phone />} text="083-456-7890" />
-            <InfoRow icon={<Building2 />} text="Human Resources" />
-            <InfoRow icon={<Calendar />} text="เริ่มงาน 8 มกราคม 2564" />
-          </div>
-        </div>
-
-        {/* ========== RIGHT FORM ========== */}
-        <div className="lg:col-span-2">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">
-              ข้อมูลส่วนตัว
-            </h2>
-
-            <button className="flex items-center gap-2 text-gray-600 hover:text-black">
-              <Pencil className="w-5 h-5" />
-              แก้ไข
-            </button>
-          </div>
-
-          {/* Form */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Employee ID */}
-            <div className="md:col-span-2">
-              <p className="text-gray-500 mb-1">
-                รหัสพนักงาน
-              </p>
-              <p className="font-medium text-lg">
-                EH001
-              </p>
-            </div>
-
-            {/* First name */}
-            <div>
-              <label className="block mb-1">
-                ชื่อ
+      <div className="bg-[#0D274E] h-screen w-[60%] flex flex-col items-right rounded-l-[100px]">
+        <div className="flex flex-col items-center justify-center h-screen mr-[3%] ml-[3%] gap-[5em]">
+          <h1 className="text-white text-6xl font-bold mb-4">Sign in to continue</h1>
+          <form className="min-w-3/4 mt-6 flex flex-col gap-6">
+            <div className="w-full">
+              <label htmlFor="email" className="text-xl font-Kanit text-[#ffffff]">
+                E-mail
               </label>
               <input
-                className="w-full border rounded-xl px-4 py-3"
-                defaultValue="สมชาย"
+                type="email"
+                id="email"
+                placeholder="Enter your registered email address"
+                className="mt-1 w-full rounded-md border px-4 py-3 placeholder-[#D1D1D1] focus:outline-none text-black bg-white text-xl"
               />
             </div>
 
-            {/* Last name */}
-            <div>
-              <label className="block mb-1">
-                นามสกุล
+            <div className="w-full">
+              <label htmlFor="password" className="text-xl font-Kanit text-[#ffffff] block mb-1">
+                Password
               </label>
-              <input
-                className="w-full border rounded-xl px-4 py-3"
-                defaultValue="ใจดี"
-              />
+              <div className="relative">
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="Enter your password"
+                  
+                  className="mt-1 w-full rounded-md border px-4 py-3 placeholder-[#D1D1D1] focus:outline-none text-black bg-white text-xl"
+                />
+              </div>
             </div>
-
-            {/* Email */}
-            <div>
-              <label className="block mb-1">
-                อีเมล
-              </label>
-              <input
-                className="w-full border rounded-xl px-4 py-3"
-                defaultValue="somchai@company.com"
-              />
+            <div className="w-full flex justify-end">
+              <p className="text-white underline text-xs cursor-pointer">Forgot your password?</p>
             </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block mb-1">
-                เบอร์โทรศัพท์
-              </label>
-              <input
-                className="w-full border rounded-xl px-4 py-3"
-                defaultValue="083-456-7890"
-              />
-            </div>
-
-            {/* Address */}
-            <div className="md:col-span-2">
-              <label className="block mb-1">
-                ที่อยู่
-              </label>
-              <textarea
-                rows={3}
-                className="w-full border rounded-xl px-4 py-3"
-                defaultValue="123/45 ม.สุขใจ ถ.พหลโยธิน ซ.10 แขวงสามเสนใน เขตพญาไท กทม. 10400"
-              />
-            </div>
-
-            {/* Department */}
-            <div>
-              <label className="block mb-1">
-                แผนก
-              </label>
-              <input
-                className="w-full border rounded-xl px-4 py-3"
-                defaultValue="Human Resources"
-              />
-            </div>
-
-            {/* Position */}
-            <div>
-              <label className="block mb-1">
-                ตำแหน่ง
-              </label>
-              <input
-                className="w-full border rounded-xl px-4 py-3"
-                defaultValue="HR Manager"
-              />
-            </div>
-          </div>
+        </form>
+        <Link href="/HRManagement/Profile">
+          <button
+            type="submit"
+            className="cursor-pointer mt-8 w-fit px-15 bg-[#D87031] text-white py-4 rounded-full font-bold hover:bg-[#7a5c4d] transition text-3xl"
+          >
+            Sign in
+          </button></Link>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-/* ===== Reusable Info Row ===== */
-function InfoRow({
-  icon,
-  text,
-}: {
-  icon: React.ReactNode
-  text: string
-}) {
-  return (
-    <div className="flex items-center gap-4">
-      <div className="text-gray-400">{icon}</div>
-      <span>{text}</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  {/* <div className="flex flex-col items-center justify-center h-screen mr-[3%] ml-[3%]">
+    <div className="relative">
+      <input
+        type="email"
+        required
+        className="peer w-[20em] px-5 py-2 text-[1.5em] border text-black border-gray-300 rounded outline-none focus:border-blue-500 bg-white"
+      />
+
+      <label
+        className="absolute left-5 top-2 text-[1.5em] transition-all duration-300 text-black
+              peer-focus:-top-2 peer-focus:left-2 peer-focus:text-base
+              peer-focus:bg-[#505c6d] peer-focus:px-1
+              peer-valid:-top-2 peer-valid:left-2 peer-valid:text-base
+              peer-valid:bg-[#000000] peer-valid:px-1">
+        E-mail
+      </label>
     </div>
-  )
-}
+  </div> */}
