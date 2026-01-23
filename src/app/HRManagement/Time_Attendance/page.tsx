@@ -11,9 +11,9 @@ export default function Time_Attendance() {
             <Sidebar />
 
             <div className="flex flex-col m-[3%] w-3/4">
-                {/* โปรไฟล์พนักงาน */}
+                {/* ลงเวลาทำงานของฉัน */}
                 <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
-                    โปรไฟล์พนักงาน
+                    ลงเวลาทำงานของฉัน
                 </h1>
             </div>
         </div>
