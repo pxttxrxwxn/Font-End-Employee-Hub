@@ -3,7 +3,6 @@
 import React, { useState } from "react"
 import Sidebar from "@/app/components/Sidebar"
 import { Mail, Phone, Building2, Calendar, Pencil } from "lucide-react"
-import Image from 'next/image'
 
 export default function Profile() {
     const [isEdit, setIsEdit] = useState(false)
