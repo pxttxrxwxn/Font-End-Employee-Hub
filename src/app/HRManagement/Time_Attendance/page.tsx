@@ -57,7 +57,7 @@ export default function Time_Attendance() {
       month: "short",
     })
 
-  /* ================= Logic ================= */
+
 
   // มาสายถ้าเกิน 08:30
   const isLate = (date: Date) => {
@@ -101,7 +101,7 @@ export default function Time_Attendance() {
   const handleCheckOut = () => {
     const now = new Date()
 
-    // ❌ ก่อน 17:00
+    //  ข้อความก่อน 17:00
     if (!canCheckOut(now)) {
       setShowCheckoutWarning(true)
       return
@@ -126,7 +126,7 @@ export default function Time_Attendance() {
     )
   }
 
-  /* ================= Badge ================= */
+
 
   const typeBadge = (type: string) => {
     switch (type) {
@@ -152,14 +152,13 @@ export default function Time_Attendance() {
     }
   }
 
-  /* ================= UI ================= */
 
   return (
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />
 
       <div className="flex-1 px-10 py-8 flex flex-col gap-10">
-        {/* HEADER */}
+        {/* ด้านบนสุด */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#DF5E10]">
             ลงเวลาทำงานของฉัน
@@ -185,9 +184,9 @@ export default function Time_Attendance() {
           </div>
         </div>
 
-        {/* TOP */}
+        
         <div className="flex gap-12">
-          {/* LEFT */}
+          {/* นาฬิกา */}
           <div className="flex-1 flex flex-col items-center">
             <Clock size={64} />
             <div className="text-6xl font-bold tracking-widest mt-6">
@@ -216,7 +215,7 @@ export default function Time_Attendance() {
             </div>
           </div>
 
-          {/* RIGHT */}
+          {/* กล่องสรุปวันนี้ */}
           <div className="w-[420px]">
             <div className="bg-[#163B6C] text-white rounded-3xl p-6">
               <h2 className="flex items-center gap-2 text-xl font-semibold mb-6">
@@ -259,7 +258,7 @@ export default function Time_Attendance() {
           </div>
         </div>
 
-        {/* HISTORY */}
+        {/* ประวัติ */}
         <div>
           <h2 className="flex items-center gap-2 text-xl font-semibold mb-4">
             <CalendarDays />
@@ -320,7 +319,7 @@ export default function Time_Attendance() {
         </div>
       </div>
 
-      {/* POPUP */}
+      {/* ข้อความก่อน17:00 */}
       {showCheckoutWarning && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-[#E0E0E0] rounded-3xl px-14 py-12 w-[520px] text-center">
