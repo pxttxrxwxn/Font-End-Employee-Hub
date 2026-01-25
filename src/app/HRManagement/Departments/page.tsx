@@ -2,7 +2,21 @@
 
 import React, { useState, useEffect, ChangeEvent } from "react"
 import Sidebar from "@/app/components/Sidebar"
-import { Bell, Plus, X } from "lucide-react"
+import { Bell, Plus, X, Minus, Trello, Users, Trash2, Pen, Briefcase } from "lucide-react"
+
+interface Position {
+    en: string;
+    th: string;
+}
+
+interface Department {
+    id: number;
+    deptEn: string;
+    deptTh: string;
+    description: string;
+    positions: Position[];
+    memberCount: number;
+}
 
 export default function Departments() {
     const [showModal, setShowModal] = useState(false);
