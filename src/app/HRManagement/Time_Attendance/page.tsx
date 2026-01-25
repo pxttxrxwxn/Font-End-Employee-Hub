@@ -24,6 +24,9 @@ export default function Time_Attendance() {
   const [checkIn, setCheckIn] = useState("--:--")
   const [checkOut, setCheckOut] = useState("--:--")
   const [history, setHistory] = useState<HistoryItem[]>([])
+  const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
+
+  /* ================= เวลา ================= */
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
@@ -54,9 +57,32 @@ export default function Time_Attendance() {
       month: "short",
     })
 
+  /* ================= Logic ================= */
+
+  // มาสายถ้าเกิน 08:30
+  const isLate = (date: Date) => {
+    const h = date.getHours()
+    const m = date.getMinutes()
+    return h > 8 || (h === 8 && m > 30)
+  }
+
+  // ออกงานได้หลัง 17:00
+  const canCheckOut = (date: Date) => {
+    const h = date.getHours()
+    const m = date.getMinutes()
+    return h > 17 || (h === 17 && m >= 0)
+  }
+
+  // ล่วงเวลาหลัง 18:00
+  const isOvertime = (date: Date) => {
+    return date.getHours() >= 18
+  }
+
   const handleCheckIn = () => {
     const now = new Date()
     const timeNow = formatTime(now)
+    const late = isLate(now)
+
     setCheckIn(timeNow)
 
     setHistory(prev => [
@@ -64,7 +90,7 @@ export default function Time_Attendance() {
         date: formatShortDate(now),
         checkIn: timeNow,
         checkOut: "--:--",
-        inType: "ปกติ",
+        inType: late ? "มาสาย" : "ปกติ",
         outType: "ไม่ใช้งาน",
         status: "รอดำเนินการ",
       },
@@ -74,7 +100,16 @@ export default function Time_Attendance() {
 
   const handleCheckOut = () => {
     const now = new Date()
+
+    // ❌ ก่อน 17:00
+    if (!canCheckOut(now)) {
+      setShowCheckoutWarning(true)
+      return
+    }
+
     const timeNow = formatTime(now)
+    const overtime = isOvertime(now)
+
     setCheckOut(timeNow)
 
     setHistory(prev =>
@@ -83,7 +118,7 @@ export default function Time_Attendance() {
           ? {
               ...item,
               checkOut: timeNow,
-              outType: "ปกติ",
+              outType: overtime ? "ล่วงเวลา" : "ปกติ",
               status: "อนุมัติ",
             }
           : item
@@ -91,11 +126,38 @@ export default function Time_Attendance() {
     )
   }
 
+  /* ================= Badge ================= */
+
+  const typeBadge = (type: string) => {
+    switch (type) {
+      case "ปกติ":
+        return "bg-green-100 text-green-700"
+      case "มาสาย":
+        return "bg-orange-100 text-orange-600"
+      case "ล่วงเวลา":
+        return "bg-blue-100 text-blue-600"
+      default:
+        return "bg-gray-200 text-gray-500"
+    }
+  }
+
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case "อนุมัติ":
+        return "bg-green-100 text-green-700"
+      case "รอดำเนินการ":
+        return "bg-yellow-100 text-yellow-700"
+      default:
+        return "bg-gray-200 text-gray-500"
+    }
+  }
+
+  /* ================= UI ================= */
+
   return (
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />
 
-      {/* MAIN */}
       <div className="flex-1 px-10 py-8 flex flex-col gap-10">
         {/* HEADER */}
         <div className="flex justify-between items-center">
@@ -117,15 +179,13 @@ export default function Time_Attendance() {
               จัดการเวลา (HR)
             </button>
 
-            {/* Notification */}
-            <button className="relative p-2 rounded-full hover:bg-gray-100">
+            <button className="p-2 rounded-full hover:bg-gray-100">
               <Bell size={22} />
-             
             </button>
           </div>
         </div>
 
-        {/* TOP SECTION */}
+        {/* TOP */}
         <div className="flex gap-12">
           {/* LEFT */}
           <div className="flex-1 flex flex-col items-center">
@@ -218,6 +278,7 @@ export default function Time_Attendance() {
                   <th className="p-4">สถานะ</th>
                 </tr>
               </thead>
+
               <tbody>
                 {history.length === 0 && (
                   <tr>
@@ -231,10 +292,26 @@ export default function Time_Attendance() {
                   <tr key={index} className="border-b">
                     <td className="p-4">{item.date}</td>
                     <td className="p-4">{item.checkIn}</td>
-                    <td className="p-4">{item.inType}</td>
+
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.inType)}`}>
+                        {item.inType}
+                      </span>
+                    </td>
+
                     <td className="p-4">{item.checkOut}</td>
-                    <td className="p-4">{item.outType}</td>
-                    <td className="p-4">{item.status}</td>
+
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.outType)}`}>
+                        {item.outType}
+                      </span>
+                    </td>
+
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusBadge(item.status)}`}>
+                        {item.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -242,6 +319,27 @@ export default function Time_Attendance() {
           </div>
         </div>
       </div>
+
+      {/* POPUP */}
+      {showCheckoutWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-[#E0E0E0] rounded-3xl px-14 py-12 w-[520px] text-center">
+            <LogOut size={56} className="mx-auto mb-6" />
+            <h2 className="text-3xl font-bold mb-4">
+              ลงเวลาออกงาน
+            </h2>
+            <p className="text-2xl font-bold text-[#E5531A] mb-10">
+              หลังจากเวลา 17:00 เท่านั้น
+            </p>
+            <button
+              onClick={() => setShowCheckoutWarning(false)}
+              className="bg-[#E1874A] text-white text-2xl font-bold px-14 py-4 rounded-full"
+            >
+              ตกลง
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
