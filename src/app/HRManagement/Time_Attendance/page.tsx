@@ -1,4 +1,7 @@
 "use client"
+
+import { usePathname } from "next/navigation"
+import Link from "next/link"
 import React, { useEffect, useState } from "react"
 import Sidebar from "@/app/components/Sidebar"
 import {
@@ -7,8 +10,10 @@ import {
   LogIn,
   LogOut,
   Bell,
+  User,
 } from "lucide-react"
 
+/* ================= Types ================= */
 type HistoryItem = {
   date: string
   checkIn: string
@@ -18,6 +23,19 @@ type HistoryItem = {
   status: string
 }
 
+
+
+const mockHistoryFromDB: HistoryItem[] = [
+  {
+    date: "จ. 26 ม.ค",
+    checkIn: "08:20",
+    inType: "ปกติ",
+    checkOut: "17:00",
+    outType: "ปกติ",
+    status: "อนุมัติแล้ว",
+  },
+]
+
 export default function Time_Attendance() {
   const [time, setTime] = useState(new Date())
   const [checkIn, setCheckIn] = useState("--:--")
@@ -25,8 +43,27 @@ export default function Time_Attendance() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
 
-  /* ================= เวลา ================= */
 
+  const pathname = usePathname()
+
+  const isMyAttendance =
+    pathname === "/HRManagement/Time_Attendance"
+
+  const isHRManagement =
+    pathname === "/HRManagement/Time_Attendance/Time_management_HR"
+
+      // database ฮะๆๆๆๆ
+  useEffect(() => {
+  
+    const fetchHistoryFromDB = async () => {
+ 
+      setHistory(mockHistoryFromDB)
+    }
+
+    fetchHistoryFromDB()
+  }, [])
+
+  /* ================= นาฬิกา ================= */
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
@@ -56,26 +93,23 @@ export default function Time_Attendance() {
       month: "short",
     })
 
-
-
-  // มาสายถ้าเกิน 08:30
+  
   const isLate = (date: Date) => {
     const h = date.getHours()
     const m = date.getMinutes()
     return h > 8 || (h === 8 && m > 30)
   }
 
-  // ออกงานได้หลัง 17:00
   const canCheckOut = (date: Date) => {
     const h = date.getHours()
     const m = date.getMinutes()
     return h > 17 || (h === 17 && m >= 0)
   }
 
-  // ล่วงเวลาหลัง 18:00
   const isOvertime = (date: Date) => {
     return date.getHours() >= 18
   }
+
 
   const handleCheckIn = () => {
     const now = new Date()
@@ -100,7 +134,6 @@ export default function Time_Attendance() {
   const handleCheckOut = () => {
     const now = new Date()
 
-    //  ข้อความก่อน 17:00
     if (!canCheckOut(now)) {
       setShowCheckoutWarning(true)
       return
@@ -125,8 +158,7 @@ export default function Time_Attendance() {
     )
   }
 
-
-
+ 
   const typeBadge = (type: string) => {
     switch (type) {
       case "ปกติ":
@@ -143,6 +175,7 @@ export default function Time_Attendance() {
   const statusBadge = (status: string) => {
     switch (status) {
       case "อนุมัติ":
+      case "อนุมัติแล้ว":
         return "bg-green-100 text-green-700"
       case "รอดำเนินการ":
         return "bg-yellow-100 text-yellow-700"
@@ -151,31 +184,46 @@ export default function Time_Attendance() {
     }
   }
 
-
+ 
   return (
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />
 
       <div className="flex-1 px-10 py-8 flex flex-col gap-10">
-        {/* ด้านบนสุด */}
+        {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#DF5E10]">
             ลงเวลาทำงานของฉัน
           </h1>
 
           <div className="flex items-center gap-3">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-              <Clock size={18} />
-              ลงเวลาของฉัน
-            </button>
+            <Link href="/HRManagement/Time_Attendance">
+              <button
+                className={`px-4 py-2 rounded-lg flex items-center gap-2
+                  ${
+                    isMyAttendance
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
+                  }`}
+              >
+                <Clock size={18} />
+                ลงเวลาของฉัน
+              </button>
+            </Link>
 
-            <button
-              disabled
-              className="bg-gray-300 text-white px-4 py-2 rounded-lg cursor-not-allowed flex items-center gap-2"
-            >
-              <CalendarDays size={18} />
-              จัดการเวลา (HR)
-            </button>
+            <Link href="/HRManagement/Time_Attendance/Time_management_HR">
+              <button
+                className={`px-4 py-2 rounded-lg flex items-center gap-2
+                  ${
+                    isHRManagement
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
+                  }`}
+              >
+                <User size={18} />
+                จัดการเวลา (HR)
+              </button>
+            </Link>
 
             <button className="p-2 rounded-full hover:bg-gray-100">
               <Bell size={22} />
