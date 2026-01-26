@@ -124,53 +124,74 @@ export default function TimeAttendanceHR() {
             </button>
           </div>
         </div>
-
+        
+          <div className="flex flex-col gap-1 mb-6">
+          <div className="flex items-center gap-2 text-2xl font-semibold text-black mt-2">
+            <User size={40} />
+            จัดการเวลาพนักงาน (HR)
+          </div>
+        </div>
         {/* ================= ตาราง ================= */}
-        <div className="bg-white rounded-xl border shadow-sm">
+        <div className="bg-white rounded-2xl overflow-hidden">
           <table className="w-full text-left">
-            <thead className="border-b text-gray-500">
+            <thead className="text-gray-500 text-sm">
               <tr>
-                <th className="p-4">ชื่อพนักงาน</th>
-                <th className="p-4">วันที่</th>
-                <th className="p-4">เวลาเข้า</th>
-                <th className="p-4">ประเภท</th>
-                <th className="p-4">เวลาออก</th>
-                <th className="p-4">ประเภท</th>
-                <th className="p-4">สถานะ</th>
-                <th className="p-4 text-center">จัดการ</th>
+                <th className="px-6 py-4 font-medium">ชื่อพนักงาน</th>
+                <th className="px-6 py-4 font-medium">วันที่</th>
+                <th className="px-6 py-4 font-medium">เวลาเข้า</th>
+                <th className="px-6 py-4 font-medium">ประเภท</th>
+                <th className="px-6 py-4 font-medium">เวลาออก</th>
+                <th className="px-6 py-4 font-medium">ประเภท</th>
+                <th className="px-6 py-4 font-medium">สถานะ</th>
+                <th className="px-6 py-4 font-medium text-center">จัดการ</th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="text-sm">
               {data.map((item, index) => (
-                <tr key={index} className="border-b">
-                  <td className="p-4">{item.name}</td>
-                  <td className="p-4">{item.date}</td>
-                  <td className="p-4">{item.checkIn}</td>
+                <tr
+                  key={index}
+                  className="hover:bg-gray-50 transition"
+                >
+                  <td className="px-6 py-4">{item.name}</td>
+                  <td className="px-6 py-4">{item.date}</td>
+                  <td className="px-6 py-4">{item.checkIn}</td>
 
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.inType)}`}>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${typeBadge(
+                        item.inType
+                      )}`}
+                    >
                       {item.inType}
                     </span>
                   </td>
 
-                  <td className="p-4">{item.checkOut}</td>
+                  <td className="px-6 py-4">{item.checkOut}</td>
 
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.outType)}`}>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${typeBadge(
+                        item.outType
+                      )}`}
+                    >
                       {item.outType}
                     </span>
                   </td>
 
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusBadge(item.status)}`}>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge(
+                        item.status
+                      )}`}
+                    >
                       {item.status}
                     </span>
                   </td>
 
-                  <td className="p-4 text-center">
+                  <td className="px-6 py-4 text-center">
                     <button
-                      className="hover:text-blue-600"
+                      className="text-gray-500 hover:text-blue-600 transition"
                       onClick={() => {
                         setSelectedItem(item)
                         setOpenEdit(true)
@@ -184,6 +205,7 @@ export default function TimeAttendanceHR() {
             </tbody>
           </table>
         </div>
+
       </div>
 
       {/* ================= ตัวแก้ไข================= */}
