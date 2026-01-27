@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import Sidebar from "@/app/components/SidebarHRManagement"
+import Sidebar from "@/app/components/SidebarEmployees"
 import { Mail, Phone, Building2, Calendar, Pencil } from "lucide-react"
 
 export default function Profile() {

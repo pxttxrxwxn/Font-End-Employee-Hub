@@ -1,10 +1,10 @@
 
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState } from 'react';
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import Sidebar from "@/app/components/Sidebar"
+import Sidebar from "@/app/components/SidebarHRManagement"
 import { Clock, Bell, Pencil, User } from "lucide-react"
 
 
@@ -67,18 +67,11 @@ export default function TimeAttendanceHR() {
     pathname === "/HRManagement/Time_Attendance/Time_management_HR"
 
   
-  const [data, setData] = useState<HRTimeItem[]>([])
 
   const [openEdit, setOpenEdit] = useState(false)
   const [selectedItem, setSelectedItem] = useState<HRTimeItem | null>(null)
 
-  /* database ฮะๆๆๆๆ*/
-  useEffect(() => {
-  
-    setData(mockData)
-
-    
-  }, [])
+  const [data] = useState(mockData);
 
   return (
     <div className="flex min-h-screen bg-white font-[Prompt] text-black">
@@ -197,7 +190,7 @@ export default function TimeAttendanceHR() {
       {/* ================= ตัวแก้ไข================= */}
       {openEdit && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-[#E0E0E0] rounded-3xl w-[620px] p-8 relative">
+          <div className="bg-[#E0E0E0] rounded-3xl w-155 p-8 relative">
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-black"
               onClick={() => setOpenEdit(false)}

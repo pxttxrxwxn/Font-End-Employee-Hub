@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import React, { useEffect, useState } from "react"
-import Sidebar from "@/app/components/SidebarHRManagement"
+import Sidebar from "@/app/components/SidebarEmployees"
 import {
   Clock,
   CalendarDays,

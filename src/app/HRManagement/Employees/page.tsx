@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
-import Sidebar from "@/app/components/Sidebar"
+import React from "react"
+import Sidebar from "@/app/components/SidebarHRManagement"
 
 export default function Employees() {
     return (

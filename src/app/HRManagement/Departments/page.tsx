@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, ChangeEvent } from "react"
-import Sidebar from "@/app/components/Sidebar"
+import Sidebar from "@/app/components/SidebarHRManagement"
 import { Bell, Plus, X, Minus, Trello, Users, Trash2, Pen, Briefcase } from "lucide-react"
 
 interface Position {
