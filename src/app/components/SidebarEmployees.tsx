@@ -62,7 +62,9 @@ export default function Sidebar() {
             <p className="text-sm font-[Prompt]">นภา สดใส</p>
             <p className="text-xs text-gray-400 font-[montserrat]">System Analyst</p>
           </div>
-          <LogOut size={18} className="text-gray-400 cursor-pointer hover:text-white" />
+          <Link href="/">
+            <LogOut size={18} className="text-gray-400 cursor-pointer hover:text-white" />
+          </Link>
         </div>
       </div>
     </aside>
