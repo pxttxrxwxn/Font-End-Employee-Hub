@@ -226,7 +226,7 @@ export default function Time_Attendance() {
             </Link>
 
             <button className="p-2 rounded-full hover:bg-gray-100">
-              <Bell size={22} />
+              <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
             </button>
           </div>
         </div>
