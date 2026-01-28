@@ -296,7 +296,11 @@ export default function Time_Attendance() {
 
                 <div>
                   <p className="mb-2">สถานะ</p>
-                  <div className="bg-gray-300 text-gray-600 rounded-xl py-4 text-center text-2xl font-bold">
+                  <div className={`rounded-xl py-4 text-center text-2xl font-bold
+                    ${ checkIn !== "--:--"
+                      ? "bg-[#E7F9C7] text-[#64C313]"
+                      : "bg-[#C2C2C2] text-[#6D6D6D]" }`
+                  }>
                     {checkIn !== "--:--" ? "Active" : "Inactive"}
                   </div>
                 </div>
