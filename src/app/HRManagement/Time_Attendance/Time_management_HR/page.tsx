@@ -227,7 +227,6 @@ export default function TimeAttendanceHR() {
                   <select className="w-full mt-1 px-4 py-2 rounded-lg bg-white">
                     <option>อนุมัติแล้ว</option>
                     <option>รอตรวจสอบ</option>
-                    <option>ไม่อนุมัติ</option>
                   </select>
                 </div>
               </div>
