@@ -1,3 +1,4 @@
+// ยังไม่ได้ใส่Localhost
 "use client"
 
 import React, { useState } from "react"
@@ -190,7 +191,7 @@ export default function Employees() {
     />
   </div>
 
-  {/* แผนก */}
+  {/* แผนก แผนกไม่ครบเดี๋ยวค่อยมาเพิ่ม */} 
   <div className="flex flex-col gap-1">
     <label className="text-sm text-gray-600">แผนก</label>
     <select
@@ -198,7 +199,7 @@ export default function Employees() {
       value={form.department}
       onChange={handleChange}
       className="w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none focus:border-black"
-    >
+    > 
       <option value="">เลือกแผนก</option>
       <option value="HR">HR</option>
       <option value="IT">IT</option>
@@ -206,7 +207,7 @@ export default function Employees() {
     </select>
   </div>
 
-  {/* ตำแหน่ง */}
+  {/* ตำแหน่ง ตำแหน่งก็ไม่ครบเดี๋ยวค่อยมาเพิ่ม */}
   <div className="flex flex-col gap-1">
     <label className="text-sm text-gray-600">ตำแหน่ง</label>
     <select
@@ -216,8 +217,8 @@ export default function Employees() {
       className="w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none focus:border-black"
     >
       <option value="">เลือกตำแหน่ง</option>
-      <option value="Manager">Manager</option>
-      <option value="Staff">Staff</option>
+      <option value="Sofrware Engineer">Sofrware Engineer</option>
+      
     </select>
   </div>
 
