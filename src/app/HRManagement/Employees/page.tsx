@@ -45,15 +45,18 @@ const handleChange = (
 
   const handleAddEmployee = () => {
     setEmployees([...employees, form])
-    setForm({
-      employeeCode: "",
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      position: "",
-      department: "",
-    })
+        setForm({
+        employeeCode: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        department: "",
+        position: "",
+        startDate: "",
+        role: "Employee",
+        address: "",
+        })
     setShowModal(false)
   }
 
@@ -144,15 +147,73 @@ const handleChange = (
               เพิ่มพนักงานใหม่
             </h2>
 
-            <div className="grid grid-cols-3 gap-6">
-              <input name="firstName" onChange={handleChange} value={form.firstName} placeholder="ชื่อ" className="input" />
-              <input name="lastName" onChange={handleChange} value={form.lastName} placeholder="นามสกุล" className="input" />
-              <input name="email" onChange={handleChange} value={form.email} placeholder="อีเมล" className="input" />
-              <input name="phone" onChange={handleChange} value={form.phone} placeholder="เบอร์โทรศัพท์" className="input" />
-              <input name="position" onChange={handleChange} value={form.position} placeholder="ตำแหน่ง" className="input" />
-              <input name="department" onChange={handleChange} value={form.department} placeholder="แผนก" className="input" />
+            <div className="grid grid-cols-3 gap-x-10 gap-y-6">
+            {/* ชื่อ */}
+            <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-600">ชื่อ</label>
+                <input
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                className="bg-transparent border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                />
             </div>
 
+            {/* นามสกุล */}
+            <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-600">นามสกุล</label>
+                <input
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                className="bg-transparent border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                />
+            </div>
+
+            {/* อีเมล */}
+            <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-600">อีเมล</label>
+                <input
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                className="bg-transparent border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                />
+            </div>
+
+            {/* เบอร์โทร */}
+            <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-600">เบอร์โทรศัพท์</label>
+                <input
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                className="bg-transparent border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                />
+            </div>
+
+            {/* ตำแหน่ง */}
+            <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-600">ตำแหน่ง</label>
+                <input
+                name="position"
+                value={form.position}
+                onChange={handleChange}
+                className="bg-transparent border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                />
+            </div>
+
+            {/* แผนก */}
+            <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-600">แผนก</label>
+                <input
+                name="department"
+                value={form.department}
+                onChange={handleChange}
+                className="bg-transparent border-b border-gray-300 focus:border-blue-600 outline-none py-1"
+                />
+            </div>
+            </div>
             <div className="flex justify-end gap-4 mt-10">
               <button
                 onClick={() => setShowModal(false)}
