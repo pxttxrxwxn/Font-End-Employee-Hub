@@ -129,7 +129,9 @@ export default function Departments() {
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                         จัดการแผนกและตำแหน่ง
                     </h1>
-                    <Bell size={30} />
+                    <button className="p-2 rounded-full hover:bg-gray-100">
+                        <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+                    </button>
                 </div>
 
                 <div className="flex w-full items-center justify-end mb-6">

@@ -122,7 +122,9 @@ export default function Leave_Request() {
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                         คำร้องขอลา
                     </h1>
-                    <Bell size={30} className="text-gray-600" />
+                    <button className="p-2 rounded-full hover:bg-gray-100">
+                        <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+                    </button>
                 </div>
 
                 <div className="flex w-full items-center justify-end mb-6">
