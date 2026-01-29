@@ -97,13 +97,15 @@ export default function Employees() {
     <div className="flex min-h-screen bg-white font-[Prompt] text-black">
       <Sidebar />
 
-      <div className="flex-1 p-10">
+      <div className="flex flex-col m-[3%] w-3/4">
         
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-orange-500">
-            จัดการพนักงาน
-          </h1>
-          <Bell className="text-gray-500 cursor-pointer" size={30} />
+        <div className="flex w-full items-start justify-between">
+            <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
+                จัดการพนักงาน
+            </h1>
+            <button className="p-2 rounded-full hover:bg-gray-100">
+                <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+            </button>
         </div>
 
         {/* Search + Add */}

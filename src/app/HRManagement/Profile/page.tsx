@@ -24,12 +24,14 @@ export default function Profile() {
 
             <div className="flex flex-col m-[3%] w-3/4 ">
                 {/* โปรไฟล์พนักงาน */}
-                <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
-                    โปรไฟล์พนักงาน
-                </h1>
-                <button className="absolute top-0 right-0 p-2 rounded-full hover:bg-gray-100 mr-20 mt-14">
-                    <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-                </button>
+                <div className="flex w-full items-start justify-between">
+                    <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
+                        จัดการแผนกและตำแหน่ง
+                    </h1>
+                    <button className="p-2 rounded-full hover:bg-gray-100">
+                        <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+                    </button>
+                </div>
                 <div className="flex w-full gap-10">
                     {/* ================= ฝั่งซ้าย ================= */}
                     <div className="w-1/3 flex flex-col items-center">

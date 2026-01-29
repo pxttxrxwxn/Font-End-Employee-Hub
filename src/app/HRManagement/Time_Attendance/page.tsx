@@ -183,9 +183,9 @@ export default function Time_Attendance() {
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />
 
-      <div className="flex-1 px-10 py-8 flex flex-col gap-10">
+      <div className="flex flex-col m-[3%] w-3/4">
 
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#DF5E10]">
             ลงเวลาทำงานของฉัน
           </h1>
