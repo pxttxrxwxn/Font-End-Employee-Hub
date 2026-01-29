@@ -203,7 +203,8 @@ export default function Employees() {
       <option value="">เลือกแผนก</option>
       <option value="HR">HR</option>
       <option value="IT">IT</option>
-      <option value="Finance">Finance</option>
+      <option value="Front-end">Front-end</option>
+      <option value="Back-end">Back-end</option>
     </select>
   </div>
 
