@@ -43,15 +43,6 @@ export default function Time_Attendance() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
 
-
-  const pathname = usePathname()
-
-  const isMyAttendance =
-    pathname === "/HRManagement/Time_Attendance"
-
-  const isHRManagement =
-    pathname === "/HRManagement/Time_Attendance/Time_management_HR"
-
       // database ฮะๆๆๆๆ
   useEffect(() => {
   
@@ -190,43 +181,16 @@ export default function Time_Attendance() {
       <Sidebar />
 
       <div className="flex-1 px-10 py-8 flex flex-col gap-10">
-        {/* Header */}
+        
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#DF5E10]">
             ลงเวลาทำงานของฉัน
           </h1>
 
           <div className="flex items-center gap-3">
-            <Link href="/HRManagement/Time_Attendance">
-              <button
-                className={`px-4 py-2 rounded-lg flex items-center gap-2
-                  ${
-                    isMyAttendance
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
-                  }`}
-              >
-                <Clock size={18} />
-                ลงเวลาของฉัน
-              </button>
-            </Link>
 
-            <Link href="/HRManagement/Time_Attendance/Time_management_HR">
-              <button
-                className={`px-4 py-2 rounded-lg flex items-center gap-2
-                  ${
-                    isHRManagement
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
-                  }`}
-              >
-                <User size={18} />
-                จัดการเวลา (HR)
-              </button>
-            </Link>
-
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <Bell size={22} />
+            <button className="absolute top-0 right-0 p-2 rounded-full hover:bg-gray-100 mr-20 mt-14">
+                <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
             </button>
           </div>
         </div>

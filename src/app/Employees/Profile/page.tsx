@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import Sidebar from "@/app/components/SidebarEmployees"
-import { Mail, Phone, Building2, Calendar, Pencil } from "lucide-react"
+import { Mail, Phone, Building2, Calendar, Pencil, Bell } from "lucide-react"
 
 export default function Profile() {
     const [isEdit, setIsEdit] = useState(false)
@@ -16,20 +16,23 @@ export default function Profile() {
                 <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                     โปรไฟล์พนักงาน
                 </h1>
+                <button className="absolute top-0 right-0 p-2 rounded-full hover:bg-gray-100 mr-20 mt-14">
+                    <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+                </button>
 
                 <div className="flex w-full gap-10">
                     {/* ================= ฝั่งซ้าย ================= */}
                     <div className="w-1/3 flex flex-col items-center">
                         {/* รูปภาพโปรไฟล์ */}
                         <div className="mt-6 w-36 h-36 rounded-full bg-[#C2C2C2] flex items-center justify-center">
-                            <p className="text-7xl text-white">ส</p>
+                            <p className="text-7xl text-white">น</p>
                         </div>
 
                         <p className="text-3xl font-semibold mt-4">
-                            สมชาย ใจดี
+                            นภา สดใส
                         </p>
                         <p className="text-lg mb-3 font-[Montserrat]">
-                            HR Manager
+                            System Analyst
                         </p>
 
                         <span className="px-4 py-1 text-sm rounded-full bg-green-100 text-green-600 mb-6">
@@ -40,12 +43,12 @@ export default function Profile() {
                         <div className="space-y-4 text-gray-500 w-full max-w-xs">
                             <div className="flex items-center gap-3">
                                 <Mail size={20} />
-                                <span>somchai@company.com</span>
+                                <span>napa@company.com</span>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 <Phone size={20} />
-                                <span>083-456-7890</span>
+                                <span>082-345-6789</span>
                             </div>
 
                             <div className="flex items-center gap-3">
@@ -79,7 +82,7 @@ export default function Profile() {
                         </div>
 
                         <p className="mb-8">
-                            รหัสพนักงาน <span className="ml-2 font-medium">EH001</span>
+                            รหัสพนักงาน <span className="ml-2 font-medium">EH055</span>
                         </p>
 
                         {/* ข้อมูลส่วนตัว */}
@@ -88,7 +91,7 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">ชื่อ</label>
                                 <input
-                                    defaultValue="สมชาย"
+                                    defaultValue="นภา"
                                     disabled={!isEdit}
                                     className={`w-full border rounded-md px-4 py-2
                                         ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
@@ -99,7 +102,7 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">นามสกุล</label>
                                 <input
-                                    defaultValue="ใจดี"
+                                    defaultValue="สดใส"
                                     disabled={!isEdit}
                                     className={`w-full border rounded-md px-4 py-2
                                         ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
@@ -110,7 +113,7 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">อีเมล</label>
                                 <input
-                                    defaultValue="somchai@company.com"
+                                    defaultValue="napa@company.com"
                                     disabled={!isEdit}
                                     className={`w-full border rounded-md px-4 py-2
                                         ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
@@ -121,7 +124,7 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">เบอร์โทรศัพท์</label>
                                 <input
-                                    defaultValue="083-456-7890"
+                                    defaultValue="082-345-6789"
                                     disabled={!isEdit}
                                     className={`w-full border rounded-md px-4 py-2
                                         ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
@@ -133,7 +136,7 @@ export default function Profile() {
                                 <label className="block mb-1">ที่อยู่</label>
                                 <textarea
                                     rows={3}
-                                    defaultValue="123/45 ม.สุขใจ ถ.พหลโยธิน ซ.10 แขวงสามเสนใน เขตพญาไท กทม. 10400"
+                                    defaultValue="120/9 ม.กรีนพาร์ค ถ.รามคำแหง ซ.24 แขวงหัวหมาก เขตบางกะปิ กทม. 10240"
                                     disabled={!isEdit}
                                     className={`w-full border rounded-md px-4 py-2
                                         ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
@@ -144,7 +147,7 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">แผนก</label>
                                 <input
-                                    defaultValue="Human Resources"
+                                    defaultValue="Software Development"
                                     disabled={!isEdit}
                                     className={`w-full border rounded-md px-4 py-2
                                         ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
@@ -155,7 +158,7 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">ตำแหน่ง</label>
                                 <input
-                                    defaultValue="HR Manager"
+                                    defaultValue="System Analyst"
                                     disabled={!isEdit}
                                     className={`w-full border rounded-md px-4 py-2
                                         ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}

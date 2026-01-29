@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react"
 
-/* ================= Types ================= */
+
 type HistoryItem = {
   date: string
   checkIn: string
@@ -22,8 +22,6 @@ type HistoryItem = {
   outType: string
   status: string
 }
-
-
 
 const mockHistoryFromDB: HistoryItem[] = [
   {
@@ -42,8 +40,7 @@ export default function Time_Attendance() {
   const [checkOut, setCheckOut] = useState("--:--")
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
-
-
+  const [isCheckedIn, setIsCheckedIn] = useState(false)
   const pathname = usePathname()
 
   const isMyAttendance =
@@ -52,18 +49,15 @@ export default function Time_Attendance() {
   const isHRManagement =
     pathname === "/HRManagement/Time_Attendance/Time_management_HR"
 
-      // database ฮะๆๆๆๆ
+
   useEffect(() => {
-  
     const fetchHistoryFromDB = async () => {
- 
       setHistory(mockHistoryFromDB)
     }
-
     fetchHistoryFromDB()
   }, [])
 
-  /* ================= นาฬิกา ================= */
+
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
@@ -93,7 +87,6 @@ export default function Time_Attendance() {
       month: "short",
     })
 
-  
   const isLate = (date: Date) => {
     const h = date.getHours()
     const m = date.getMinutes()
@@ -110,55 +103,57 @@ export default function Time_Attendance() {
     return date.getHours() >= 18
   }
 
-
   const handleCheckIn = () => {
-    const now = new Date()
-    const timeNow = formatTime(now)
-    const late = isLate(now)
+  if (isCheckedIn) return 
 
-    setCheckIn(timeNow)
+  const now = new Date()
+  const timeNow = formatTime(now)
 
-    setHistory(prev => [
-      {
-        date: formatShortDate(now),
-        checkIn: timeNow,
-        checkOut: "--:--",
-        inType: late ? "มาสาย" : "ปกติ",
-        outType: "ไม่ใช้งาน",
-        status: "รอดำเนินการ",
-      },
-      ...prev,
-    ])
-  }
+  setCheckIn(timeNow)
+  setIsCheckedIn(true) 
+
+  setHistory(prev => [
+    {
+      date: formatShortDate(now),
+      checkIn: timeNow,
+      checkOut: "--:--",
+      inType: isLate(now) ? "มาสาย" : "ปกติ",
+      outType: "ไม่ใช้งาน",
+      status: "รอดำเนินการ",
+    },
+    ...prev,
+  ])
+}
+
 
   const handleCheckOut = () => {
-    const now = new Date()
+  const now = new Date()
 
-    if (!canCheckOut(now)) {
-      setShowCheckoutWarning(true)
-      return
-    }
-
-    const timeNow = formatTime(now)
-    const overtime = isOvertime(now)
-
-    setCheckOut(timeNow)
-
-    setHistory(prev =>
-      prev.map((item, index) =>
-        index === 0
-          ? {
-              ...item,
-              checkOut: timeNow,
-              outType: overtime ? "ล่วงเวลา" : "ปกติ",
-              status: "อนุมัติ",
-            }
-          : item
-      )
-    )
+  if (!canCheckOut(now)) {
+    setShowCheckoutWarning(true)
+    return
   }
 
- 
+  const timeNow = formatTime(now)
+
+  setCheckOut(timeNow)
+  setIsCheckedIn(false)
+
+  setHistory(prev =>
+    prev.map((item, index) =>
+      index === 0
+        ? {
+            ...item,
+            checkOut: timeNow,
+            outType: isOvertime(now) ? "ล่วงเวลา" : "ปกติ",
+            status: "อนุมัติแล้ว",
+          }
+        : item
+    )
+  )
+}
+
+
   const typeBadge = (type: string) => {
     switch (type) {
       case "ปกติ":
@@ -184,13 +179,12 @@ export default function Time_Attendance() {
     }
   }
 
- 
   return (
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />
 
       <div className="flex-1 px-10 py-8 flex flex-col gap-10">
-        {/* Header */}
+
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#DF5E10]">
             ลงเวลาทำงานของฉัน
@@ -203,7 +197,7 @@ export default function Time_Attendance() {
                   ${
                     isMyAttendance
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
+                      : "bg-gray-300 text-white hover:bg-gray-400"
                   }`}
               >
                 <Clock size={18} />
@@ -217,7 +211,7 @@ export default function Time_Attendance() {
                   ${
                     isHRManagement
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
+                      : "bg-gray-300 text-white hover:bg-gray-400"
                   }`}
               >
                 <User size={18} />
@@ -226,14 +220,16 @@ export default function Time_Attendance() {
             </Link>
 
             <button className="p-2 rounded-full hover:bg-gray-100">
+
               <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+
+
             </button>
           </div>
         </div>
 
-        
         <div className="flex gap-12">
-          {/* นาฬิกา */}
+
           <div className="flex-1 flex flex-col items-center">
             <Clock size={64} />
             <div className="text-6xl font-bold tracking-widest mt-6">
@@ -262,7 +258,7 @@ export default function Time_Attendance() {
             </div>
           </div>
 
-          {/* กล่องสรุปวันนี้ */}
+
           <div className="w-105">
             <div className="bg-[#163B6C] text-white rounded-3xl p-6">
               <h2 className="flex items-center gap-2 text-xl font-semibold mb-6">
@@ -309,7 +305,7 @@ export default function Time_Attendance() {
           </div>
         </div>
 
-        {/* ประวัติ */}
+
         <div>
           <h2 className="flex items-center gap-2 text-xl font-semibold mb-4">
             <CalendarDays />
@@ -330,33 +326,21 @@ export default function Time_Attendance() {
               </thead>
 
               <tbody>
-                {history.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="p-6 text-center text-gray-400">
-                      ยังไม่มีประวัติการลงเวลา
-                    </td>
-                  </tr>
-                )}
-
                 {history.map((item, index) => (
                   <tr key={index} className="border-b">
                     <td className="p-4">{item.date}</td>
                     <td className="p-4">{item.checkIn}</td>
-
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.inType)}`}>
                         {item.inType}
                       </span>
                     </td>
-
                     <td className="p-4">{item.checkOut}</td>
-
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.outType)}`}>
                         {item.outType}
                       </span>
                     </td>
-
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusBadge(item.status)}`}>
                         {item.status}
@@ -370,7 +354,7 @@ export default function Time_Attendance() {
         </div>
       </div>
 
-      {/* ข้อความก่อน17:00 */}
+
       {showCheckoutWarning && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-[#E0E0E0] rounded-3xl px-14 py-12 w-130 text-center">
@@ -393,4 +377,3 @@ export default function Time_Attendance() {
     </div>
   )
 }
-
