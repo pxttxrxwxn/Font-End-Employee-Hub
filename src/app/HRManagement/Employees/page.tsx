@@ -181,7 +181,7 @@ export default function Employees() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-[#F2EEEE] w-[900px] rounded-3xl p-10 relative">
+          <div className="bg-[#F2EEEE] w-225 rounded-3xl p-10 relative">
             <button
               onClick={() => setShowModal(false)}
               className="absolute top-6 right-6 text-gray-500"
