@@ -34,15 +34,17 @@ export default function Departments() {
     const [selectedDept, setSelectedDept] = useState<Department | null>(null);
 
     useEffect(() => {
-        try {
-            const savedData = localStorage.getItem("my_departments");
-            if (savedData) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setDepartmentList(JSON.parse(savedData));
+        const loadData = setTimeout(() => {
+            try {
+                const savedData = localStorage.getItem("my_departments");
+                if (savedData) {
+                    setDepartmentList(JSON.parse(savedData));
+                }
+            } catch (error) {
+                console.error("Failed to load departments:", error);
             }
-        } catch (error) {
-            console.error("Failed to load departments:", error);
-        }
+        }, 0);
+        return () => clearTimeout(loadData);
     }, []);
 
     const handleCloseModal = () => {
@@ -186,12 +188,12 @@ export default function Departments() {
 
                             <div className="flex items-center gap-2 text-blue-600 mb-4 text-sm font-medium">
                                 <Users size={18} />
-                                <span>{dept.memberCount} ผู้ใช้งาน</span>
+                                <span className="text-black">{dept.memberCount} <span className="text-[#6D6D6D]">ผู้ใช้งาน</span></span>
                             </div>
 
                             <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
                                 <span className="text-gray-400 text-xs flex items-center gap-1">
-                                    <Briefcase size={12} /> ตำแหน่งในแผนก
+                                    <Briefcase size={20} className="text-[#757575]"/> ตำแหน่งในแผนก
                                 </span>
                                 <div className="w-full flex flex-wrap gap-2 mt-1">
                                     {dept.positions.map((pos, idx) => (
