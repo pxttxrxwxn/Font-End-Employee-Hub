@@ -1,22 +1,35 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Mail, Phone, Building2, Calendar, Pencil } from "lucide-react"
+import { Mail, Phone, Building2, Calendar, Pencil, Bell } from "lucide-react"
+
 
 export default function Profile() {
     const [isEdit, setIsEdit] = useState(false)
+    useEffect(() => {
+        fetch("http://localhost:3000/profile")
+            .then((res) => res.json())
+            .then((data) => {
+                console.log("Profile from localhost:", data)
+            })
+            .catch((err) => {
+                console.error("Error fetching profile:", err)
+            })
+    }, [])
 
     return (
         <div className="flex bg-white font-[Prompt] min-h-screen text-black">
             <Sidebar />
 
-            <div className="flex flex-col m-[3%] w-3/4">
+            <div className="flex flex-col m-[3%] w-3/4 ">
                 {/* โปรไฟล์พนักงาน */}
                 <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                     โปรไฟล์พนักงาน
                 </h1>
-
+                <button className="absolute top-0 right-0 p-2 rounded-full hover:bg-gray-100 mr-20 mt-14">
+                    <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+                </button>
                 <div className="flex w-full gap-10">
                     {/* ================= ฝั่งซ้าย ================= */}
                     <div className="w-1/3 flex flex-col items-center">

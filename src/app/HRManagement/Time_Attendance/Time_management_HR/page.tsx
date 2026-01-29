@@ -91,7 +91,7 @@ export default function TimeAttendanceHR() {
                   ${
                     isMyAttendance
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
+                      : "bg-gray-300 text-white hover:bg-gray-400"
                   }`}
               >
                 <Clock size={18} />
@@ -105,7 +105,7 @@ export default function TimeAttendanceHR() {
                   ${
                     isHRManagement
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600 hover:bg-gray-400"
+                      : "bg-gray-300 text-white hover:bg-gray-400"
                   }`}
               >
                 <User size={18} />
