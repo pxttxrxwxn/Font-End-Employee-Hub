@@ -1,12 +1,10 @@
-
 "use client"
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Clock, Bell, Pencil, User } from "lucide-react"
-
 
 type HRTimeItem = {
   name: string
@@ -18,7 +16,7 @@ type HRTimeItem = {
   status: string
 }
 
-/* ================== สมชาย ทดสอบๆ ================== */
+/* ================== mock ================== */
 const mockData: HRTimeItem[] = [
   {
     name: "สมชาย ใจดี",
@@ -31,7 +29,7 @@ const mockData: HRTimeItem[] = [
   },
 ]
 
-/* ================== ข้อมูลสีๆๆๆ================== */
+/* ================== badge ================== */
 const typeBadge = (type: string) => {
   switch (type) {
     case "ปกติ":
@@ -50,12 +48,12 @@ const statusBadge = (status: string) => {
     case "อนุมัติแล้ว":
       return "bg-lime-200 text-lime-700"
     case "รอตรวจสอบ":
+    case "รอดำเนินการ":
       return "bg-yellow-200 text-yellow-700"
     default:
       return "bg-gray-200 text-gray-500"
   }
 }
-
 
 export default function TimeAttendanceHR() {
   const pathname = usePathname()
@@ -66,12 +64,35 @@ export default function TimeAttendanceHR() {
   const isHRManagement =
     pathname === "/HRManagement/Time_Attendance/Time_management_HR"
 
-  
-
   const [openEdit, setOpenEdit] = useState(false)
   const [selectedItem, setSelectedItem] = useState<HRTimeItem | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
-  const [data] = useState(mockData);
+  const [data, setData] = useState<HRTimeItem[]>([])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const stored = localStorage.getItem("timeAttendanceHistory")
+
+    if (stored) {
+      const parsed = JSON.parse(stored)
+
+      const mapped: HRTimeItem[] = parsed.map((item: any) => ({
+        name: "สมชาย ใจดี",
+        date: item.date,
+        checkIn: item.checkIn,
+        inType: item.inType,
+        checkOut: item.checkOut,
+        outType: item.outType,
+        status: item.status,
+      }))
+
+      setData(mapped)
+    } else {
+      setData(mockData)
+    }
+  }, [])
 
   return (
     <div className="flex min-h-screen bg-white font-[Prompt] text-black">
@@ -88,11 +109,9 @@ export default function TimeAttendanceHR() {
             <Link href="/HRManagement/Time_Attendance">
               <button
                 className={`px-4 py-2 rounded-lg flex items-center gap-2
-                  ${
-                    isMyAttendance
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-white hover:bg-gray-400"
-                  }`}
+                  ${isMyAttendance
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-300 text-white hover:bg-gray-400"}`}
               >
                 <Clock size={18} />
                 ลงเวลาของฉัน
@@ -102,11 +121,9 @@ export default function TimeAttendanceHR() {
             <Link href="/HRManagement/Time_Attendance/Time_management_HR">
               <button
                 className={`px-4 py-2 rounded-lg flex items-center gap-2
-                  ${
-                    isHRManagement
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-white hover:bg-gray-400"
-                  }`}
+                  ${isHRManagement
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-300 text-white hover:bg-gray-400"}`}
               >
                 <User size={18} />
                 จัดการเวลา (HR)
@@ -114,20 +131,12 @@ export default function TimeAttendanceHR() {
             </Link>
 
             <button className="p-2 rounded-full hover:bg-gray-100">
-              <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+              <Bell size={30} className="text-[#6D6D6D]" />
             </button>
           </div>
         </div>
-        
-          <div className="flex flex-col gap-1 mb-6">
-          <div className="flex items-center gap-2 text-2xl font-semibold text-black">
-            <User size={22} />
-            จัดการเวลาพนักงาน (HR)
-          </div>
-        </div>
-        {/* ================= ตาราง ================= */}
-        <div className="bg-white rounded-xl border shadow-sm ">
-          
+
+        <div className="bg-white rounded-xl border shadow-sm">
           <table className="w-full text-left">
             <thead className="border-b text-gray-500">
               <tr>
@@ -148,34 +157,30 @@ export default function TimeAttendanceHR() {
                   <td className="p-4">{item.name}</td>
                   <td className="p-4">{item.date}</td>
                   <td className="p-4">{item.checkIn}</td>
-
                   <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.inType)}`}>
+                    <span className={`px-3 py-1 rounded-full text-sm ${typeBadge(item.inType)}`}>
                       {item.inType}
                     </span>
                   </td>
-
                   <td className="p-4">{item.checkOut}</td>
-
                   <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeBadge(item.outType)}`}>
+                    <span className={`px-3 py-1 rounded-full text-sm ${typeBadge(item.outType)}`}>
                       {item.outType}
                     </span>
                   </td>
-
                   <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusBadge(item.status)}`}>
+                    <span className={`px-3 py-1 rounded-full text-sm ${statusBadge(item.status)}`}>
                       {item.status}
                     </span>
                   </td>
-
                   <td className="p-4 text-center">
                     <button
-                      className="hover:text-blue-600"
                       onClick={() => {
-                        setSelectedItem(item)
+                        setSelectedItem({ ...item })
+                        setSelectedIndex(index)
                         setOpenEdit(true)
                       }}
+                      className="hover:text-blue-600"
                     >
                       <Pencil size={18} />
                     </button>
@@ -202,7 +207,6 @@ export default function TimeAttendanceHR() {
               แก้ไขเวลาลงเวลา
             </h2>
 
-
             <div className="flex flex-col gap-4">
               <div>
                 <label className="font-medium">ชื่อพนักงาน</label>
@@ -218,13 +222,22 @@ export default function TimeAttendanceHR() {
                   <label className="font-medium">วันที่</label>
                   <input
                     value={selectedItem.date}
+                    onChange={(e) =>
+                      setSelectedItem({ ...selectedItem, date: e.target.value })
+                    }
                     className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
                   />
                 </div>
 
                 <div className="flex-1">
                   <label className="font-medium">สถานะ</label>
-                  <select className="w-full mt-1 px-4 py-2 rounded-lg bg-white">
+                  <select
+                    value={selectedItem.status}
+                    onChange={(e) =>
+                      setSelectedItem({ ...selectedItem, status: e.target.value })
+                    }
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                  >
                     <option>อนุมัติแล้ว</option>
                     <option>รอตรวจสอบ</option>
                   </select>
@@ -236,13 +249,22 @@ export default function TimeAttendanceHR() {
                   <label className="font-medium">เวลาเข้างาน</label>
                   <input
                     value={selectedItem.checkIn}
+                    onChange={(e) =>
+                      setSelectedItem({ ...selectedItem, checkIn: e.target.value })
+                    }
                     className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
                   />
                 </div>
 
                 <div className="flex-1">
                   <label className="font-medium">ประเภท</label>
-                  <select className="w-full mt-1 px-4 py-2 rounded-lg bg-white">
+                  <select
+                    value={selectedItem.inType}
+                    onChange={(e) =>
+                      setSelectedItem({ ...selectedItem, inType: e.target.value })
+                    }
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                  >
                     <option>ปกติ</option>
                     <option>มาสาย</option>
                   </select>
@@ -254,13 +276,22 @@ export default function TimeAttendanceHR() {
                   <label className="font-medium">เวลาออกงาน</label>
                   <input
                     value={selectedItem.checkOut}
+                    onChange={(e) =>
+                      setSelectedItem({ ...selectedItem, checkOut: e.target.value })
+                    }
                     className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
                   />
                 </div>
 
                 <div className="flex-1">
                   <label className="font-medium">ประเภท</label>
-                  <select className="w-full mt-1 px-4 py-2 rounded-lg bg-white">
+                  <select
+                    value={selectedItem.outType}
+                    onChange={(e) =>
+                      setSelectedItem({ ...selectedItem, outType: e.target.value })
+                    }
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                  >
                     <option>ปกติ</option>
                     <option>ล่วงเวลา</option>
                   </select>
@@ -284,7 +315,22 @@ export default function TimeAttendanceHR() {
               >
                 ยกเลิก
               </button>
-              <button className="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold">
+              <button
+                onClick={() => {
+                  if (selectedIndex === null || !selectedItem) return
+
+                  const updated = [...data]
+                  updated[selectedIndex] = selectedItem
+
+                  setData(updated)
+                  localStorage.setItem(
+                    "timeAttendanceHistory",
+                    JSON.stringify(updated)
+                  )
+                  setOpenEdit(false)
+                }}
+                className="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold"
+              >
                 บันทึกการเปลี่ยนแปลง
               </button>
             </div>

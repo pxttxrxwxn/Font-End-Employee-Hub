@@ -13,7 +13,6 @@ import {
   User,
 } from "lucide-react"
 
-/* ================= Types ================= */
 type HistoryItem = {
   date: string
   checkIn: string
@@ -23,38 +22,47 @@ type HistoryItem = {
   status: string
 }
 
-
-
-const mockHistoryFromDB: HistoryItem[] = [
-  {
-    date: "จ. 26 ม.ค",
-    checkIn: "08:20",
-    inType: "ปกติ",
-    checkOut: "17:00",
-    outType: "ปกติ",
-    status: "อนุมัติแล้ว",
-  },
-]
-
 export default function Time_Attendance() {
   const [time, setTime] = useState(new Date())
   const [checkIn, setCheckIn] = useState("--:--")
   const [checkOut, setCheckOut] = useState("--:--")
-  const [history, setHistory] = useState<HistoryItem[]>([])
-  const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
 
-      // database ฮะๆๆๆๆ
-  useEffect(() => {
-  
-    const fetchHistoryFromDB = async () => {
- 
-      setHistory(mockHistoryFromDB)
+
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+  if (typeof window !== "undefined") {
+    try {
+      const storedData = localStorage.getItem("timeAttendanceHistory")
+      const parsed = storedData ? JSON.parse(storedData) : []
+
+      
+      return Array.isArray(parsed) ? parsed : []
+    } catch (error) {
+      console.error("Invalid localStorage data", error)
+      return []
     }
+  }
+  return []
+})
+  const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
+  const [isCheckedIn, setIsCheckedIn] = useState(false)
+  const pathname = usePathname()
 
-    fetchHistoryFromDB()
-  }, [])
+  const isMyAttendance =
+    pathname === "/HRManagement/Time_Attendance"
 
-  /* ================= นาฬิกา ================= */
+  const isHRManagement =
+    pathname === "/HRManagement/Time_Attendance/Time_management_HR"
+
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "timeAttendanceHistory",
+        JSON.stringify(history)
+      )
+    }
+  }, [history])
+
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
@@ -84,7 +92,6 @@ export default function Time_Attendance() {
       month: "short",
     })
 
-  
   const isLate = (date: Date) => {
     const h = date.getHours()
     const m = date.getMinutes()
@@ -101,20 +108,21 @@ export default function Time_Attendance() {
     return date.getHours() >= 18
   }
 
-
   const handleCheckIn = () => {
+    if (isCheckedIn) return
+
     const now = new Date()
     const timeNow = formatTime(now)
-    const late = isLate(now)
 
     setCheckIn(timeNow)
+    setIsCheckedIn(true)
 
     setHistory(prev => [
       {
         date: formatShortDate(now),
         checkIn: timeNow,
         checkOut: "--:--",
-        inType: late ? "มาสาย" : "ปกติ",
+        inType: isLate(now) ? "มาสาย" : "ปกติ",
         outType: "ไม่ใช้งาน",
         status: "รอดำเนินการ",
       },
@@ -131,9 +139,9 @@ export default function Time_Attendance() {
     }
 
     const timeNow = formatTime(now)
-    const overtime = isOvertime(now)
 
     setCheckOut(timeNow)
+    setIsCheckedIn(false)
 
     setHistory(prev =>
       prev.map((item, index) =>
@@ -141,15 +149,14 @@ export default function Time_Attendance() {
           ? {
               ...item,
               checkOut: timeNow,
-              outType: overtime ? "ล่วงเวลา" : "ปกติ",
-              status: "อนุมัติ",
+              outType: isOvertime(now) ? "ล่วงเวลา" : "ปกติ",
+              status: "อนุมัติแล้ว",
             }
           : item
       )
     )
   }
 
- 
   const typeBadge = (type: string) => {
     switch (type) {
       case "ปกติ":
@@ -175,7 +182,6 @@ export default function Time_Attendance() {
     }
   }
 
- 
   return (
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />

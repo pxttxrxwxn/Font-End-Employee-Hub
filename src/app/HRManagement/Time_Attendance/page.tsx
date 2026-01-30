@@ -13,7 +13,6 @@ import {
   User,
 } from "lucide-react"
 
-
 type HistoryItem = {
   date: string
   checkIn: string
@@ -23,22 +22,27 @@ type HistoryItem = {
   status: string
 }
 
-const mockHistoryFromDB: HistoryItem[] = [
-  {
-    date: "จ. 26 ม.ค",
-    checkIn: "08:20",
-    inType: "ปกติ",
-    checkOut: "17:00",
-    outType: "ปกติ",
-    status: "อนุมัติแล้ว",
-  },
-]
-
 export default function Time_Attendance() {
   const [time, setTime] = useState(new Date())
   const [checkIn, setCheckIn] = useState("--:--")
   const [checkOut, setCheckOut] = useState("--:--")
-  const [history, setHistory] = useState<HistoryItem[]>([])
+
+
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+  if (typeof window !== "undefined") {
+    try {
+      const storedData = localStorage.getItem("timeAttendanceHistory")
+      const parsed = storedData ? JSON.parse(storedData) : []
+
+      // ✅ สำคัญมาก
+      return Array.isArray(parsed) ? parsed : []
+    } catch (error) {
+      console.error("Invalid localStorage data", error)
+      return []
+    }
+  }
+  return []
+})
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
   const [isCheckedIn, setIsCheckedIn] = useState(false)
   const pathname = usePathname()
@@ -49,14 +53,15 @@ export default function Time_Attendance() {
   const isHRManagement =
     pathname === "/HRManagement/Time_Attendance/Time_management_HR"
 
-
+  // ✅ บันทึก history ลง localStorage ทุกครั้งที่เปลี่ยน
   useEffect(() => {
-    const fetchHistoryFromDB = async () => {
-      setHistory(mockHistoryFromDB)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "timeAttendanceHistory",
+        JSON.stringify(history)
+      )
     }
-    fetchHistoryFromDB()
-  }, [])
-
+  }, [history])
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
@@ -104,55 +109,53 @@ export default function Time_Attendance() {
   }
 
   const handleCheckIn = () => {
-  if (isCheckedIn) return 
+    if (isCheckedIn) return
 
-  const now = new Date()
-  const timeNow = formatTime(now)
+    const now = new Date()
+    const timeNow = formatTime(now)
 
-  setCheckIn(timeNow)
-  setIsCheckedIn(true) 
+    setCheckIn(timeNow)
+    setIsCheckedIn(true)
 
-  setHistory(prev => [
-    {
-      date: formatShortDate(now),
-      checkIn: timeNow,
-      checkOut: "--:--",
-      inType: isLate(now) ? "มาสาย" : "ปกติ",
-      outType: "ไม่ใช้งาน",
-      status: "รอดำเนินการ",
-    },
-    ...prev,
-  ])
-}
-
-
-  const handleCheckOut = () => {
-  const now = new Date()
-
-  if (!canCheckOut(now)) {
-    setShowCheckoutWarning(true)
-    return
+    setHistory(prev => [
+      {
+        date: formatShortDate(now),
+        checkIn: timeNow,
+        checkOut: "--:--",
+        inType: isLate(now) ? "มาสาย" : "ปกติ",
+        outType: "ไม่ใช้งาน",
+        status: "รอดำเนินการ",
+      },
+      ...prev,
+    ])
   }
 
-  const timeNow = formatTime(now)
+  const handleCheckOut = () => {
+    const now = new Date()
 
-  setCheckOut(timeNow)
-  setIsCheckedIn(false)
+    if (!canCheckOut(now)) {
+      setShowCheckoutWarning(true)
+      return
+    }
 
-  setHistory(prev =>
-    prev.map((item, index) =>
-      index === 0
-        ? {
-            ...item,
-            checkOut: timeNow,
-            outType: isOvertime(now) ? "ล่วงเวลา" : "ปกติ",
-            status: "อนุมัติแล้ว",
-          }
-        : item
+    const timeNow = formatTime(now)
+
+    setCheckOut(timeNow)
+    setIsCheckedIn(false)
+
+    setHistory(prev =>
+      prev.map((item, index) =>
+        index === 0
+          ? {
+              ...item,
+              checkOut: timeNow,
+              outType: isOvertime(now) ? "ล่วงเวลา" : "ปกติ",
+              status: "อนุมัติแล้ว",
+            }
+          : item
+      )
     )
-  )
-}
-
+  }
 
   const typeBadge = (type: string) => {
     switch (type) {
