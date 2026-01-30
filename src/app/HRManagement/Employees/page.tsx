@@ -1,4 +1,3 @@
-// คิดไม่ออกกกกกกก
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -8,11 +7,12 @@ import {
   Plus,
   Mail,
   Phone,
-  MoreVertical,
+  MoreHorizontal,
   X,
   Bell,
 } from "lucide-react"
 
+/* ---------- Types ---------- */
 type Employee = {
   employeeCode: string
   firstName: string
@@ -26,11 +26,20 @@ type Employee = {
   address: string
 }
 
-const API_URL = "http://localhost:3000/api/employees"
+const STORAGE_KEY = "employees_data"
 
 export default function Employees() {
   const [showModal, setShowModal] = useState(false)
-  const [employees, setEmployees] = useState<Employee[]>([])
+  const [showDetail, setShowDetail] = useState(false)
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  }
+  return []
+})
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<Employee | null>(null)
 
   const [form, setForm] = useState<Employee>({
     employeeCode: "",
@@ -45,13 +54,14 @@ export default function Employees() {
     address: "",
   })
 
-  /* ----------  localhost ---------- */
+  /* ---------- โหลดจาก localStorage ---------- */
+useEffect(() => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(employees))
+}, [employees])
+  /* ---------- บันทึก localStorage ---------- */
   useEffect(() => {
-    fetch(API_URL)
-      .then(res => res.json())
-      .then(data => setEmployees(data))
-      .catch(err => console.error(err))
-  }, [])
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(employees))
+  }, [employees])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -59,38 +69,63 @@ export default function Employees() {
     >
   ) => {
     const { name, value } = e.target
-    setForm({ ...form, [name]: value })
+    setForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  /* ---------- ตรวจสอบข้อมูลครบ ---------- */
+  const isFormValid = () => {
+    return (
+      form.employeeCode.trim() !== "" &&
+      form.firstName.trim() !== "" &&
+      form.lastName.trim() !== "" &&
+      form.email.trim() !== "" &&
+      form.phone.trim() !== "" &&
+      form.department.trim() !== "" &&
+      form.position.trim() !== "" &&
+      form.startDate.trim() !== "" &&
+      form.address.trim() !== ""
+    )
   }
 
   /* ---------- เพิ่มพนักงาน ---------- */
-  const handleAddEmployee = async () => {
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
-
-      const newEmployee = await res.json()
-      setEmployees(prev => [...prev, newEmployee])
-
-      setForm({
-        employeeCode: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        department: "",
-        position: "",
-        startDate: "",
-        role: "Employee",
-        address: "",
-      })
-
-      setShowModal(false)
-    } catch (err) {
-      console.error(err)
+  const handleAddEmployee = () => {
+    if (!isFormValid()) {
+      alert("กรุณากรอกข้อมูลให้ครบทุกช่อง")
+      return
     }
+
+    setEmployees(prev => [...prev, form])
+
+    setForm({
+      employeeCode: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      department: "",
+      position: "",
+      startDate: "",
+      role: "Employee",
+      address: "",
+    })
+
+    setShowModal(false)
+  }
+
+  /* ---------- ลบพนักงาน ---------- */
+  const handleDeleteEmployee = () => {
+    if (!selectedEmployee) return
+    const confirmDelete = confirm("คุณต้องการลบพนักงานคนนี้ใช่หรือไม่?")
+    if (!confirmDelete) return
+
+    setEmployees(prev =>
+      prev.filter(
+        emp => emp.employeeCode !== selectedEmployee.employeeCode
+      )
+    )
+
+    setShowDetail(false)
+    setSelectedEmployee(null)
   }
 
   return (
@@ -98,12 +133,12 @@ export default function Employees() {
       <Sidebar />
 
       <div className="flex-1 p-10">
-        
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-orange-500">
             จัดการพนักงาน
           </h1>
-          <Bell className="text-gray-500 cursor-pointer" size={30} />
+          <Bell size={30} className="text-gray-500 cursor-pointer" />
         </div>
 
         {/* Search + Add */}
@@ -135,7 +170,13 @@ export default function Employees() {
               key={index}
               className="bg-gray-100 rounded-2xl p-6 relative"
             >
-              <MoreVertical className="absolute top-4 right-4 text-gray-500" />
+              <MoreHorizontal
+                className="absolute top-4 right-4 text-gray-500 cursor-pointer"
+                onClick={() => {
+                  setSelectedEmployee(emp)
+                  setShowDetail(true)
+                }}
+              />
 
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-14 h-14 rounded-full bg-gray-400 flex items-center justify-center text-xl font-bold text-white">
@@ -176,7 +217,7 @@ export default function Employees() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* ---------- Modal เพิ่มพนักงาน ---------- */}
       {showModal && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-[#F2EEEE] w-[900px] rounded-3xl p-10 relative">
@@ -198,19 +239,11 @@ export default function Employees() {
               <Input label="ชื่อ" name="firstName" value={form.firstName} onChange={handleChange} />
               <Input label="นามสกุล" name="lastName" value={form.lastName} onChange={handleChange} />
 
-              <Select
-                label="แผนก"
-                name="department"
-                value={form.department}
-                onChange={handleChange}
+              <Select label="แผนก" name="department" value={form.department} onChange={handleChange}
                 options={["HR", "IT", "Front-end", "Back-end"]}
               />
 
-              <Select
-                label="ตำแหน่ง"
-                name="position"
-                value={form.position}
-                onChange={handleChange}
+              <Select label="ตำแหน่ง" name="position" value={form.position} onChange={handleChange}
                 options={["Software Engineer", "HR Manager"]}
               />
 
@@ -222,7 +255,6 @@ export default function Employees() {
                 onChange={handleChange}
               />
 
-              {/* Role */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm text-gray-600">สิทธิ์การใช้งาน</label>
                 {["Employee", "HR"].map(r => (
@@ -259,9 +291,60 @@ export default function Employees() {
               </button>
               <button
                 onClick={handleAddEmployee}
-                className="px-6 py-2 rounded-xl bg-orange-500 text-white"
+                disabled={!isFormValid()}
+                className={`px-6 py-2 rounded-xl text-white
+                  ${isFormValid()
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-400 cursor-not-allowed"}
+                `}
               >
                 เพิ่มพนักงาน
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Modal รายละเอียดพนักงาน ---------- */}
+      {showDetail && selectedEmployee && (
+        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
+          <div className="bg-[#F5F0F0] w-[900px] rounded-3xl p-8 relative">
+            <button
+              className="absolute top-6 right-6 text-gray-500"
+              onClick={() => setShowDetail(false)}
+            >
+              <X />
+            </button>
+
+            <h2 className="text-2xl font-bold text-blue-700 mb-6">
+              รายละเอียดพนักงาน
+            </h2>
+
+            <div className="grid grid-cols-3 gap-6 text-sm">
+              <Detail label="รหัสพนักงาน" value={selectedEmployee.employeeCode} />
+              <Detail label="อีเมล" value={selectedEmployee.email} />
+              <Detail label="เบอร์โทรศัพท์" value={selectedEmployee.phone} />
+              <Detail label="ชื่อ" value={selectedEmployee.firstName} />
+              <Detail label="นามสกุล" value={selectedEmployee.lastName} />
+              <Detail label="ตำแหน่ง" value={selectedEmployee.position} />
+              <Detail label="แผนก" value={selectedEmployee.department} />
+              <Detail label="วันที่เริ่มงาน" value={selectedEmployee.startDate} />
+              <Detail label="สิทธิ์การใช้งาน" value={selectedEmployee.role} />
+
+              <div className="col-span-3">
+                <label className="text-gray-600">ที่อยู่</label>
+                <div className="bg-white rounded-lg p-3 mt-1">
+                  {selectedEmployee.address}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-8">
+              <button
+                onClick={handleDeleteEmployee}
+                className="px-6 py-2 bg-orange-600 text-white rounded-xl"
+              >
+                ลบพนักงานออก
               </button>
             </div>
           </div>
@@ -299,6 +382,17 @@ function Select({ label, options, ...props }: any) {
           </option>
         ))}
       </select>
+    </div>
+  )
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-gray-600">{label}</label>
+      <div className="bg-white rounded-lg px-3 py-2">
+        {value}
+      </div>
     </div>
   )
 }
