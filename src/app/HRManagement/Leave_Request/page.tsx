@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Bell, Plus, X, Trash2, CircleCheck, CircleX, FileText } from "lucide-react"
+import { Bell, Plus, X, Trash2, CircleCheck, CircleX, FileText, AlertTriangle } from "lucide-react"
 
 interface LeaveRequest {
     id: number;
@@ -24,6 +24,10 @@ export default function Leave_Request() {
         }
         return []
     })
+
+    // --- เพิ่ม State สำหรับ Modal ลบ ---
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteId, setDeleteId] = useState<number | null>(null)
 
     const initialFormState = {
         type: "",
@@ -107,10 +111,19 @@ export default function Leave_Request() {
         saveToLocalStorage(updatedHistory)
     }
 
-    const handleDelete = (id: number) => {
-        if (confirm("คุณต้องการลบรายการนี้ใช่หรือไม่?")) {
-            const updatedHistory = leaveHistory.filter(item => item.id !== id)
+    // --- เปลี่ยนฟังก์ชันลบเป็นการเปิด Modal ---
+    const handleDeleteClick = (id: number) => {
+        setDeleteId(id)
+        setShowDeleteModal(true)
+    }
+
+    // --- ฟังก์ชันยืนยันการลบจริง ---
+    const confirmDelete = () => {
+        if (deleteId !== null) {
+            const updatedHistory = leaveHistory.filter(item => item.id !== deleteId)
             saveToLocalStorage(updatedHistory)
+            setShowDeleteModal(false)
+            setDeleteId(null)
         }
     }
 
@@ -130,7 +143,7 @@ export default function Leave_Request() {
                 <div className="flex w-full items-center justify-end mb-6">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors shadow-md"
+                        className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
                     >
                         <Plus />
                         ยื่นคำร้องขอลา
@@ -202,7 +215,7 @@ export default function Leave_Request() {
                                                     </>
                                                 ) : (
                                                     <button
-                                                        onClick={() => handleDelete(item.id)}
+                                                        onClick={() => handleDeleteClick(item.id)}
                                                         className="text-gray-500 hover:text-red-600 transition-transform hover:scale-110"
                                                         title="ลบรายการ"
                                                     >
@@ -219,9 +232,11 @@ export default function Leave_Request() {
                 </div>
             </div>
 
+            {/* Modal ยื่นคำร้อง (Existing) */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className="bg-[#F2EEEE] w-150 rounded-2xl shadow-2xl p-6 relative animate-in fade-in zoom-in duration-200">
+                        {/* ... (เนื้อหาใน Modal เดิม) ... */}
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-[#134BA1]">ยื่นคำร้องขอลา</h2>
                             <button onClick={closeModal} className="text-gray-500 hover:text-red-500">
@@ -305,6 +320,42 @@ export default function Leave_Request() {
                             >
                                 ยื่นคำร้อง
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Popup ยืนยันการลบ (ส่วนที่เพิ่มใหม่) --- */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
+                    <div className="bg-white w-100 rounded-xl p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="bg-red-100 p-3 rounded-full mb-4">
+                                <AlertTriangle size={40} className="text-[#D03E11]" />
+                            </div>
+
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                ยืนยันการลบคำร้อง?
+                            </h3>
+                            <p className="text-gray-500 mb-6">
+                                คุณต้องการลบคำร้องขอลาจการนี้ใช่หรือไม่? <br />
+                                การกระทำนี้ไม่สามารถย้อนกลับได้
+                            </p>
+
+                            <div className="flex gap-3 w-full">
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                                >
+                                    ยกเลิก
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 px-4 py-2 bg-[#D03E11] text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                                >
+                                    ยืนยันการลบ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
