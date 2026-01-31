@@ -18,6 +18,19 @@ interface Department {
     memberCount: number;
 }
 
+interface EmployeeRecord {
+    employeeCode: string
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    department: string
+    position: string
+    startDate: string
+    role: string
+    address: string
+}
+
 export default function Departments() {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -36,17 +49,37 @@ export default function Departments() {
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     useEffect(() => {
-        const loadData = setTimeout(() => {
+        const loadData = () => {
             try {
-                const savedData = localStorage.getItem("my_departments");
-                if (savedData) {
-                    setDepartmentList(JSON.parse(savedData));
+                const savedDepts = localStorage.getItem("my_departments");
+                const savedEmployees = localStorage.getItem("employees_data");
+
+                if (savedDepts) {
+                    let deptList: Department[] = JSON.parse(savedDepts);
+
+                    if (savedEmployees) {
+                        const employees: EmployeeRecord[] = JSON.parse(savedEmployees);
+
+                        deptList = deptList.map(dept => {
+                            const count = employees.filter(emp =>
+                                emp.department === dept.deptEn || emp.department === dept.deptTh
+                            ).length;
+
+                            return { ...dept, memberCount: count };
+                        });
+                    }
+
+                    setDepartmentList(deptList);
                 }
             } catch (error) {
-                console.error("Failed to load departments:", error);
+                console.error("Failed to load data:", error);
             }
-        }, 0);
-        return () => clearTimeout(loadData);
+        };
+
+        loadData();
+        
+        window.addEventListener('focus', loadData);
+        return () => window.removeEventListener('focus', loadData);
     }, []);
 
     const handleCloseModal = () => {
