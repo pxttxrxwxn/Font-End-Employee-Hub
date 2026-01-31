@@ -29,7 +29,6 @@ const mockData: HRTimeItem[] = [
   },
 ]
 
-/* ================== badge ================== */
 const typeBadge = (type: string) => {
   switch (type) {
     case "ปกติ":
@@ -52,6 +51,10 @@ const statusBadge = (status: string) => {
       return "bg-yellow-200 text-yellow-700"
     default:
       return "bg-gray-200 text-gray-500"
+
+      /// 
+      case "ไม่อนุมัติ":
+    return "bg-yellow-200 text-yellow-700"
   }
 }
 
@@ -192,7 +195,6 @@ export default function TimeAttendanceHR() {
         </div>
       </div>
 
-      {/* ================= ตัวแก้ไข================= */}
       {openEdit && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-[#E0E0E0] rounded-3xl w-155 p-8 relative">
@@ -240,6 +242,7 @@ export default function TimeAttendanceHR() {
                   >
                     <option>อนุมัติแล้ว</option>
                     <option>รอตรวจสอบ</option>
+                    <option>ไม่อนุมัติ</option>
                   </select>
                 </div>
               </div>
@@ -275,6 +278,7 @@ export default function TimeAttendanceHR() {
                 <div className="flex-1">
                   <label className="font-medium">เวลาออกงาน</label>
                   <input
+                    type='time'
                     value={selectedItem.checkOut}
                     onChange={(e) =>
                       setSelectedItem({ ...selectedItem, checkOut: e.target.value })
