@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, ChangeEvent } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Bell, Plus, X, Minus, Trello, Users, Trash2, Pen, Briefcase } from "lucide-react"
+import { Bell, Plus, X, Minus, Trello, Users, Trash2, Pen, Briefcase, AlertTriangle } from "lucide-react"
 
 interface Position {
     en: string;
@@ -29,9 +29,11 @@ export default function Departments() {
         { en: "Software Development Manager", th: "ผู้จัดการแผนกพัฒนาระบบ" }
     ]);
     const [departmentList, setDepartmentList] = useState<Department[]>([]);
-
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedDept, setSelectedDept] = useState<Department | null>(null);
+
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     useEffect(() => {
         const loadData = setTimeout(() => {
@@ -95,10 +97,25 @@ export default function Departments() {
         handleCloseModal();
     };
 
-    const handleDelete = (id: number) => {
-        const updatedList = departmentList.filter(dept => dept.id !== id);
-        setDepartmentList(updatedList);
-        localStorage.setItem("my_departments", JSON.stringify(updatedList));
+    const handleDeleteClick = (id: number) => {
+        setDeleteId(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = () => {
+        if (deleteId !== null) {
+            const updatedList = departmentList.filter(dept => dept.id !== deleteId);
+            setDepartmentList(updatedList);
+            localStorage.setItem("my_departments", JSON.stringify(updatedList));
+            
+            setShowDeleteModal(false);
+            setDeleteId(null);
+        }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
+        setDeleteId(null);
     };
 
     const addNewRow = () => {
@@ -139,7 +156,7 @@ export default function Departments() {
                 <div className="flex w-full items-center justify-end mb-6">
                     <div
                         onClick={() => setShowModal(true)}
-                        className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
+                        className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
                     >
                         <Plus />
                         แผนกและตำแหน่ง
@@ -164,7 +181,7 @@ export default function Departments() {
                                     className="text-[#D03E11] cursor-pointer hover:text-red-500"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDelete(dept.id);
+                                        handleDeleteClick(dept.id);
                                     }}
                                 />
                             </div>
@@ -193,7 +210,7 @@ export default function Departments() {
 
                             <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
                                 <span className="text-gray-400 text-xs flex items-center gap-1">
-                                    <Briefcase size={20} className="text-[#757575]"/> ตำแหน่งในแผนก
+                                    <Briefcase size={20} className="text-[#757575]" /> ตำแหน่งในแผนก
                                 </span>
                                 <div className="w-full flex flex-wrap gap-2 mt-1">
                                     {dept.positions.map((pos, idx) => (
@@ -210,7 +227,7 @@ export default function Departments() {
                 </div>
 
                 {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-25">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-40">
                         <div className="bg-[#F2EEEE] w-[50%] rounded-xl p-8 shadow-lg relative max-h-[90vh] overflow-y-auto">
                             <button onClick={handleCloseModal} className="absolute top-6 right-6 text-gray-500 hover:text-black">
                                 <X size={24} />
@@ -264,9 +281,9 @@ export default function Departments() {
                 )}
 
                 {showDetailModal && selectedDept && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-25">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-40">
                         <div className="bg-[#F2EEEE] w-[50%] rounded-xl p-8 shadow-lg relative max-h-[90vh] overflow-y-auto">
-                            
+
                             <button
                                 onClick={() => setShowDetailModal(false)}
                                 className="absolute top-6 right-6 text-gray-500 hover:text-black"
@@ -318,6 +335,44 @@ export default function Departments() {
                         </div>
                     </div>
                 )}
+
+                {showDeleteModal && (
+                    <div className="fixed inset-0 z-60 flex items-center justify-center bg-opacity-40 bg-black/50">
+                        <div className="bg-white w-100 rounded-xl p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                            
+                            <div className="flex flex-col items-center text-center">
+                                <div className="bg-red-100 p-3 rounded-full mb-4">
+                                    <AlertTriangle size={40} className="text-[#D03E11]" />
+                                </div>
+                                
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                    ยืนยันการลบแผนก?
+                                </h3>
+                                <p className="text-gray-500 mb-6">
+                                    คุณแน่ใจหรือไม่ที่จะลบแผนกนี้? <br/>
+                                    การกระทำนี้ไม่สามารถย้อนกลับได้
+                                </p>
+
+                                <div className="flex gap-3 w-full">
+                                    <button 
+                                        onClick={cancelDelete}
+                                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                    <button
+                                        onClick={confirmDelete}
+                                        className="flex-1 px-4 py-2 bg-[#ff0000] text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                                    >
+                                        ยืนยันการลบ
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                )}
+
             </div>
         </div>
     )
