@@ -1,18 +1,29 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, InputHTMLAttributes, SelectHTMLAttributes } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import {
-  Search,
-  Plus,
-  Mail,
-  Phone,
-  MoreHorizontal,
-  X,
-  Bell,
+import { Search, Plus, Mail, Phone, MoreHorizontal,
+  X, Bell, AlertTriangle
 } from "lucide-react"
 
-/* ---------- Types ---------- */
+interface PositionData {
+  en: string;
+  th: string;
+}
+
+interface DepartmentData {
+  id: number;
+  deptEn: string;
+  deptTh: string;
+  positions: PositionData[];
+}
+
+interface RoleData {
+  id: number;
+  nameEN: string;
+  nameTH: string;
+}
+
 type Employee = {
   employeeCode: string
   firstName: string
@@ -22,8 +33,17 @@ type Employee = {
   department: string
   position: string
   startDate: string
-  role: "Employee" | "HR"
+  role: string
   address: string
+}
+
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string
+}
+
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label: string
+  options: string[]
 }
 
 const STORAGE_KEY = "employees_data"
@@ -31,15 +51,20 @@ const STORAGE_KEY = "employees_data"
 export default function Employees() {
   const [showModal, setShowModal] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  
+  const [departmentsData, setDepartmentsData] = useState<DepartmentData[]>([])
+  const [rolesData, setRolesData] = useState<RoleData[]>([])
+
   const [employees, setEmployees] = useState<Employee[]>(() => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return stored ? JSON.parse(stored) : []
-  }
-  return []
-})
-  const [selectedEmployee, setSelectedEmployee] =
-    useState<Employee | null>(null)
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      return stored ? JSON.parse(stored) : []
+    }
+    return []
+  })
+  
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
 
   const [form, setForm] = useState<Employee>({
     employeeCode: "",
@@ -50,15 +75,26 @@ export default function Employees() {
     department: "",
     position: "",
     startDate: "",
-    role: "Employee",
+    role: "",
     address: "",
   })
 
-  /* ---------- โหลดจาก localStorage ---------- */
-useEffect(() => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(employees))
-}, [employees])
-  /* ---------- บันทึก localStorage ---------- */
+  useEffect(() => {
+    const loadData = setTimeout(() => {
+      const deptStr = localStorage.getItem("my_departments");
+      if (deptStr) {
+        setDepartmentsData(JSON.parse(deptStr));
+      }
+
+      const roleStr = localStorage.getItem("hr_roles");
+      if (roleStr) {
+        setRolesData(JSON.parse(roleStr));
+      }
+    }, 0);
+
+    return () => clearTimeout(loadData);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(employees))
   }, [employees])
@@ -69,10 +105,19 @@ useEffect(() => {
     >
   ) => {
     const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
+
+    if (name === "department") {
+        setForm((prev) => ({ ...prev, [name]: value, position: "" }))
+    } else {
+        setForm((prev) => ({ ...prev, [name]: value }))
+    }
   }
 
-  /* ---------- ตรวจสอบข้อมูลครบ ---------- */
+  const getPositionOptions = () => {
+    const selectedDept = departmentsData.find(d => d.deptEn === form.department);
+    return selectedDept ? selectedDept.positions.map(p => p.en).filter(Boolean) : [];
+  }
+
   const isFormValid = () => {
     return (
       form.employeeCode.trim() !== "" &&
@@ -83,18 +128,18 @@ useEffect(() => {
       form.department.trim() !== "" &&
       form.position.trim() !== "" &&
       form.startDate.trim() !== "" &&
+      form.role.trim() !== "" &&
       form.address.trim() !== ""
     )
   }
 
-  /* ---------- เพิ่มพนักงาน ---------- */
   const handleAddEmployee = () => {
     if (!isFormValid()) {
       alert("กรุณากรอกข้อมูลให้ครบทุกช่อง")
       return
     }
 
-    setEmployees(prev => [...prev, form])
+    setEmployees((prev) => [...prev, form])
 
     setForm({
       employeeCode: "",
@@ -112,18 +157,16 @@ useEffect(() => {
     setShowModal(false)
   }
 
-  /* ---------- ลบพนักงาน ---------- */
-  const handleDeleteEmployee = () => {
+  const confirmDeleteEmployee = () => {
     if (!selectedEmployee) return
-    const confirmDelete = confirm("คุณต้องการลบพนักงานคนนี้ใช่หรือไม่?")
-    if (!confirmDelete) return
 
-    setEmployees(prev =>
+    setEmployees((prev) =>
       prev.filter(
-        emp => emp.employeeCode !== selectedEmployee.employeeCode
+        (emp) => emp.employeeCode !== selectedEmployee.employeeCode
       )
     )
 
+    setShowDeleteModal(false)
     setShowDetail(false)
     setSelectedEmployee(null)
   }
@@ -132,21 +175,16 @@ useEffect(() => {
     <div className="flex min-h-screen bg-white font-[Prompt] text-black">
       <Sidebar />
 
-
       <div className="flex flex-col m-[3%] w-3/4">
-        
         <div className="flex w-full items-start justify-between">
-            <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
-                จัดการพนักงาน
-            </h1>
-            <button className="p-2 rounded-full hover:bg-gray-100">
-                <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-            </button>
-
-
+          <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
+            จัดการพนักงาน
+          </h1>
+          <button className="p-2 rounded-full hover:bg-gray-100">
+            <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+          </button>
         </div>
 
-        {/* Search + Add */}
         <div className="flex items-center justify-between mb-10">
           <div className="relative w-80">
             <Search
@@ -161,14 +199,13 @@ useEffect(() => {
 
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-blue-700 text-white px-5 py-2.5 rounded-xl"
+            className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
           >
             <Plus size={20} />
             เพิ่มพนักงาน
           </button>
         </div>
 
-        {/* Employee Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {employees.map((emp, index) => (
             <div
@@ -222,13 +259,12 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ---------- Modal เพิ่มพนักงาน ---------- */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-[#F2EEEE] w-225 rounded-3xl p-10 relative">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
+          <div className="bg-[#F2EEEE] w-225 rounded-3xl p-10 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-6 right-6 text-gray-500"
+              className="absolute top-6 right-6 text-[#6D6D6D] cursor-pointer"
             >
               <X />
             </button>
@@ -244,12 +280,20 @@ useEffect(() => {
               <Input label="ชื่อ" name="firstName" value={form.firstName} onChange={handleChange} />
               <Input label="นามสกุล" name="lastName" value={form.lastName} onChange={handleChange} />
 
-              <Select label="แผนก" name="department" value={form.department} onChange={handleChange}
-                options={["HR", "IT", "Front-end", "Back-end"]}
+              <Select
+                label="แผนก"
+                name="department"
+                value={form.department}
+                onChange={handleChange}
+                options={departmentsData.map(d => d.deptEn)}
               />
 
-              <Select label="ตำแหน่ง" name="position" value={form.position} onChange={handleChange}
-                options={["Software Engineer", "HR Manager"]}
+              <Select
+                label="ตำแหน่ง"
+                name="position"
+                value={form.position}
+                onChange={handleChange}
+                options={getPositionOptions()}
               />
 
               <Input
@@ -261,23 +305,30 @@ useEffect(() => {
               />
 
               <div className="flex flex-col gap-2">
-                <label className="text-sm text-gray-600">สิทธิ์การใช้งาน</label>
-                {["Employee", "HR"].map(r => (
-                  <label key={r} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name="role"
-                      value={r}
-                      checked={form.role === r}
-                      onChange={handleChange}
-                    />
-                    {r}
-                  </label>
-                ))}
+                <label className="text-sm text-black font-medium">สิทธิ์การใช้งาน</label>
+                <div className="flex flex-col gap-2">
+                    {rolesData.length > 0 ? (
+                        rolesData.map((r) => (
+                        <label key={r.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input
+                            type="radio"
+                            name="role"
+                            value={r.nameEN}
+                            checked={form.role === r.nameEN}
+                            onChange={handleChange}
+                            className="cursor-pointer w-4 h-4 accent-[#009951]"
+                            />
+                            {r.nameEN}
+                        </label>
+                        ))
+                    ) : (
+                        <div className="text-gray-400 text-sm">ไม่พบข้อมูลบทบาท กรุณาเพิ่มในหน้า Roles</div>
+                    )}
+                </div>
               </div>
 
               <div className="col-span-3">
-                <label className="text-sm text-gray-600">ที่อยู่</label>
+                <label className="text-sm text-black font-medium">ที่อยู่</label>
                 <textarea
                   name="address"
                   value={form.address}
@@ -290,14 +341,14 @@ useEffect(() => {
             <div className="flex justify-end gap-4 mt-10">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-6 py-2 rounded-xl bg-gray-300"
+                className="px-6 py-2 rounded-xl bg-gray-300 cursor-pointer hover:bg-gray-400 transition-colors"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={handleAddEmployee}
                 disabled={!isFormValid()}
-                className={`px-6 py-2 rounded-xl text-white
+                className={`px-6 py-2 rounded-xl text-white cursor-pointer transition-colors
                   ${isFormValid()
                     ? "bg-orange-500 hover:bg-orange-600"
                     : "bg-gray-400 cursor-not-allowed"}
@@ -310,12 +361,11 @@ useEffect(() => {
         </div>
       )}
 
-      {/* ---------- Modal รายละเอียดพนักงาน ---------- */}
       {showDetail && selectedEmployee && (
         <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-          <div className="bg-[#F5F0F0] w-[900px] rounded-3xl p-8 relative">
+          <div className="bg-[#F5F0F0] w-225 rounded-3xl p-8 relative">
             <button
-              className="absolute top-6 right-6 text-gray-500"
+              className="absolute top-6 right-6 text-gray-500 hover:text-black"
               onClick={() => setShowDetail(false)}
             >
               <X />
@@ -338,7 +388,7 @@ useEffect(() => {
 
               <div className="col-span-3">
                 <label className="text-gray-600">ที่อยู่</label>
-                <div className="bg-white rounded-lg p-3 mt-1">
+                <div className="bg-white rounded-lg p-3 mt-1 shadow-sm">
                   {selectedEmployee.address}
                 </div>
               </div>
@@ -346,8 +396,8 @@ useEffect(() => {
 
             <div className="flex justify-end mt-8">
               <button
-                onClick={handleDeleteEmployee}
-                className="px-6 py-2 bg-orange-600 text-white rounded-xl"
+                onClick={() => setShowDeleteModal(true)}
+                className="px-6 py-2 bg-[#C83B10] text-white rounded-xl cursor-pointer hover:bg-red-700 transition-colors"
               >
                 ลบพนักงานออก
               </button>
@@ -355,34 +405,69 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
+            <div className="bg-white w-100 rounded-xl p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                <div className="flex flex-col items-center text-center">
+                    <div className="bg-red-100 p-3 rounded-full mb-4">
+                        <AlertTriangle size={40} className="text-[#C83B10]" />
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        ยืนยันการลบพนักงาน?
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                        คุณต้องการลบคุณ <span className="font-bold text-gray-700">{selectedEmployee?.firstName} {selectedEmployee?.lastName}</span> ใช่หรือไม่? <br/>
+                        การกระทำนี้ไม่สามารถย้อนกลับได้
+                    </p>
+
+                    <div className="flex gap-3 w-full">
+                        <button 
+                            onClick={() => setShowDeleteModal(false)}
+                            className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                        >
+                            ยกเลิก
+                        </button>
+                        <button 
+                            onClick={confirmDeleteEmployee}
+                            className="flex-1 px-4 py-2 bg-[#C83B10] text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                        >
+                            ลบพนักงาน
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
     </div>
   )
 }
 
-/* ---------- Reusable Components ---------- */
-function Input({ label, ...props }: any) {
+function Input({ label, ...props }: InputProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm text-gray-600">{label}</label>
+      <label className="text-sm text-black font-medium">{label}</label>
       <input
         {...props}
-        className="w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none"
+        className={`w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none focus:border-blue-500 transition-colors ${props.className || ""}`}
       />
     </div>
   )
 }
 
-function Select({ label, options, ...props }: any) {
+function Select({ label, options, ...props }: SelectProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm text-gray-600">{label}</label>
+      <label className="text-sm text-black font-medium">{label}</label>
       <select
         {...props}
-        className="w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none"
+        className="w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none focus:border-blue-500 transition-colors"
       >
         <option value="">เลือก</option>
-        {options.map((op: string) => (
-          <option key={op} value={op}>
+        {options.map((op: string, index) => (
+          <option key={index} value={op}>
             {op}
           </option>
         ))}
@@ -395,7 +480,7 @@ function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-gray-600">{label}</label>
-      <div className="bg-white rounded-lg px-3 py-2">
+      <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
         {value}
       </div>
     </div>
