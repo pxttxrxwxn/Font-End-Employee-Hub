@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState, InputHTMLAttributes, SelectHTMLAttributes } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Search, Plus, Mail, Phone, MoreHorizontal,
-  X, Bell, AlertTriangle
+import { Search, Plus, Mail, Phone, MoreHorizontal, X, Bell, AlertTriangle
 } from "lucide-react"
 
 interface PositionData {
@@ -52,7 +51,7 @@ export default function Employees() {
   const [showModal, setShowModal] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  
+  const [searchTerm, setSearchTerm] = useState("");
   const [departmentsData, setDepartmentsData] = useState<DepartmentData[]>([])
   const [rolesData, setRolesData] = useState<RoleData[]>([])
 
@@ -63,7 +62,15 @@ export default function Employees() {
     }
     return []
   })
-  
+  const filteredEmployees = employees.filter((emp) => {
+    const search = searchTerm.toLowerCase();
+    const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
+    
+    return (
+      emp.employeeCode.toLowerCase().includes(search) || 
+      fullName.includes(search)
+    );
+  });
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
 
   const [form, setForm] = useState<Employee>({
@@ -135,12 +142,20 @@ export default function Employees() {
 
   const handleAddEmployee = () => {
     if (!isFormValid()) {
-      alert("กรุณากรอกข้อมูลให้ครบทุกช่อง")
-      return
+      alert("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+      return;
     }
 
-    setEmployees((prev) => [...prev, form])
+    const isDuplicate = employees.some(
+      (emp) => emp.employeeCode.trim() === form.employeeCode.trim()
+    );
 
+    if (isDuplicate) {
+      alert("รหัสพนักงานนี้มีอยู่ในระบบแล้ว กรุณาตรวจสอบอีกครั้ง");
+      return;
+    }
+
+    setEmployees((prev) => [...prev, form]);
     setForm({
       employeeCode: "",
       firstName: "",
@@ -152,10 +167,9 @@ export default function Employees() {
       startDate: "",
       role: "Employee",
       address: "",
-    })
-
-    setShowModal(false)
-  }
+    });
+    setShowModal(false);
+  };
 
   const confirmDeleteEmployee = () => {
     if (!selectedEmployee) return
@@ -193,10 +207,11 @@ export default function Employees() {
             />
             <input
               placeholder="ค้นหาพนักงาน..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 outline-none"
             />
           </div>
-
           <button
             onClick={() => setShowModal(true)}
             className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
@@ -207,9 +222,9 @@ export default function Employees() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {employees.map((emp, index) => (
+          {filteredEmployees.map((emp) => (
             <div
-              key={index}
+              key={emp.employeeCode}
               className="bg-gray-100 rounded-2xl p-6 relative"
             >
               <MoreHorizontal
