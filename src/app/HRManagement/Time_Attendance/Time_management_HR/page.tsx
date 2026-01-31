@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Sidebar from "@/app/components/SidebarHRManagement"
@@ -49,53 +49,46 @@ const statusBadge = (status: string) => {
     case "รอตรวจสอบ":
     case "รอดำเนินการ":
       return "bg-yellow-200 text-yellow-700"
+    case "ไม่อนุมัติ":
+      return "bg-red-200 text-red-700"
     default:
       return "bg-gray-200 text-gray-500"
-
-      /// 
-      case "ไม่อนุมัติ":
-    return "bg-yellow-200 text-yellow-700"
   }
 }
 
 export default function TimeAttendanceHR() {
   const pathname = usePathname()
 
-  const isMyAttendance =
-    pathname === "/HRManagement/Time_Attendance"
-
-  const isHRManagement =
-    pathname === "/HRManagement/Time_Attendance/Time_management_HR"
+  const isMyAttendance = pathname === "/HRManagement/Time_Attendance"
+  const isHRManagement = pathname === "/HRManagement/Time_Attendance/Time_management_HR"
 
   const [openEdit, setOpenEdit] = useState(false)
   const [selectedItem, setSelectedItem] = useState<HRTimeItem | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
-  const [data, setData] = useState<HRTimeItem[]>([])
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-
-    const stored = localStorage.getItem("timeAttendanceHistory")
-
-    if (stored) {
-      const parsed = JSON.parse(stored)
-
-      const mapped: HRTimeItem[] = parsed.map((item: any) => ({
-        name: "สมชาย ใจดี",
-        date: item.date,
-        checkIn: item.checkIn,
-        inType: item.inType,
-        checkOut: item.checkOut,
-        outType: item.outType,
-        status: item.status,
-      }))
-
-      setData(mapped)
-    } else {
-      setData(mockData)
+  const [data, setData] = useState<HRTimeItem[]>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("timeAttendanceHistory")
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          return parsed.map((item: Omit<HRTimeItem, 'name'>) => ({
+            name: "สมชาย ใจดี",
+            date: item.date,
+            checkIn: item.checkIn,
+            inType: item.inType,
+            checkOut: item.checkOut,
+            outType: item.outType,
+            status: item.status,
+          }))
+        } catch (e) {
+          console.error("Failed to parse storage", e)
+          return mockData
+        }
+      }
     }
-  }, [])
+    return mockData
+  })
 
   return (
     <div className="flex min-h-screen bg-white font-[Prompt] text-black">
