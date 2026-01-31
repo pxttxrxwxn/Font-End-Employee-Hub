@@ -20,6 +20,19 @@ interface RoleFormData {
     permissions: string[];
 }
 
+interface EmployeeRecord {
+    employeeCode: string
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    department: string
+    position: string
+    startDate: string
+    role: string
+    address: string
+}
+
 const PERMISSIONS_LIST = [
     { id: 'manageUser', label: 'จัดการผู้ใช้', desc: 'เพิ่ม แก้ไข ลบผู้ใช้ในระบบ' },
     { id: 'viewHistory', label: 'ดูประวัติ', desc: 'ดูประวัติการทำงาน' },
@@ -36,8 +49,6 @@ export default function Roles() {
 
     const [roles, setRoles] = useState<Role[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
-    // --- เพิ่ม State สำหรับ Modal ลบ ---
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -51,14 +62,32 @@ export default function Roles() {
     });
 
     useEffect(() => {
-        const loadData = setTimeout(() => {
+        const loadData = () => {
             const savedRoles = localStorage.getItem("hr_roles");
+            const savedEmployees = localStorage.getItem("employees_data");
+            
             if (savedRoles) {
-                setRoles(JSON.parse(savedRoles));
-            }
-        }, 0);
+                let rolesList: Role[] = JSON.parse(savedRoles);
 
-        return () => clearTimeout(loadData);
+                if (savedEmployees) {
+                    const employees: EmployeeRecord[] = JSON.parse(savedEmployees);
+                    
+                    rolesList = rolesList.map(role => {
+                        const count = employees.filter(emp =>
+                            emp.role === role.nameEN || emp.role === role.nameTH
+                        ).length;
+                        
+                        return { ...role, userCount: count };
+                    });
+                }
+                
+                setRoles(rolesList);
+            }
+        };
+
+        loadData();
+        window.addEventListener('focus', loadData);
+        return () => window.removeEventListener('focus', loadData);
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -125,13 +154,11 @@ export default function Roles() {
         resetForm();
     };
 
-    // --- เปลี่ยนฟังก์ชันลบเป็นการเปิด Modal ---
     const handleDeleteClick = (id: number) => {
         setDeleteId(id);
         setShowDeleteModal(true);
     };
 
-    // --- ฟังก์ชันยืนยันการลบจริง ---
     const confirmDelete = () => {
         if (deleteId !== null) {
             const updatedRoles = roles.filter(r => r.id !== deleteId);
