@@ -179,7 +179,7 @@ export default function Time_Attendance() {
       case "ปกติ": return "bg-green-100 text-green-700"
       case "มาสาย": return "bg-orange-100 text-orange-600"
       case "ล่วงเวลา": return "bg-blue-100 text-blue-600"
-      default: return "bg-gray-200 text-gray-500"
+      default: return "bg-[#C2C2C2] text-[#6D6D6D]"
     }
   }
 
@@ -188,7 +188,7 @@ export default function Time_Attendance() {
       case "อนุมัติ":
       case "อนุมัติแล้ว": return "bg-green-100 text-green-700"
       case "รอดำเนินการ": return "bg-yellow-100 text-yellow-700"
-      default: return "bg-gray-200 text-gray-500"
+      default: return "bg-[#C2C2C2] text-[#6D6D6D]"
     }
   }
 
@@ -235,7 +235,7 @@ export default function Time_Attendance() {
               <button
                 onClick={handleCheckIn}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl text-lg font-medium transition-colors
-                  ${isCheckedIn 
+                  ${isCheckedIn
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-green-100 text-green-700 hover:bg-green-200"}`}
               >
