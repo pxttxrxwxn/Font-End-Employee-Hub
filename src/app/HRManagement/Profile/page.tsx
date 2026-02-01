@@ -4,26 +4,87 @@ import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Mail, Phone, Building2, Calendar, Pencil, Bell } from "lucide-react"
 
+type Employee = {
+    employeeCode: string
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    department: string
+    position: string
+    startDate: string
+    role: string
+    address: string
+}
 
 export default function Profile() {
     const [isEdit, setIsEdit] = useState(false)
+    const [currentUser, setCurrentUser] = useState<Employee | null>(null)
+    const [formData, setFormData] = useState<Partial<Employee>>({})
+
     useEffect(() => {
-        fetch("http://localhost:3000/profile")
-            .then((res) => res.json())
-            .then((data) => {
-                console.log("Profile from localhost:", data)
-            })
-            .catch((err) => {
-                console.error("Error fetching profile:", err)
-            })
+        const loadData = () => {
+            try {
+                const storedData = localStorage.getItem("employees_data")
+                if (storedData) {
+                    const employees: Employee[] = JSON.parse(storedData)
+                    const targetEmployee = employees.find((emp: Employee) => emp.employeeCode === "EH001")
+                    
+                    if (targetEmployee) {
+                        setCurrentUser(targetEmployee)
+                        setFormData(targetEmployee)
+                    } else {
+                        console.error("Employee EH001 not found")
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading data from localStorage:", err)
+            }
+        }
+
+        loadData()
     }, [])
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }))
+    }
+
+    const handleSave = () => {
+        try {
+            const storedData = localStorage.getItem("employees_data")
+            if (storedData) {
+                const employees: Employee[] = JSON.parse(storedData)
+                const updatedEmployees = employees.map((emp: Employee) =>
+                    emp.employeeCode === "EH001" ? { ...emp, ...formData } : emp
+                )
+                localStorage.setItem("employees_data", JSON.stringify(updatedEmployees))
+                setCurrentUser(formData as Employee)
+                setIsEdit(false)
+                alert("บันทึกข้อมูลเรียบร้อยแล้ว")
+            }
+        } catch (error) {
+            console.error("Error saving data:", error)
+        }
+    }
+
+    const handleCancel = () => {
+        if (currentUser) {
+            setFormData(currentUser)
+        }
+        setIsEdit(false)
+    }
+
+    if (!currentUser) return <div className="p-10">Loading Profile... (Ensure &apos;employees_data&apos; exists in localStorage)</div>
 
     return (
         <div className="flex bg-white font-[Prompt] min-h-screen text-black">
             <Sidebar />
 
             <div className="flex flex-col m-[3%] w-3/4 ">
-                {/* โปรไฟล์พนักงาน */}
                 <div className="flex w-full items-start justify-between">
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                         จัดการแผนกและตำแหน่ง
@@ -32,50 +93,46 @@ export default function Profile() {
                         <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
                     </button>
                 </div>
+
                 <div className="flex w-full gap-10">
-                    {/* ================= ฝั่งซ้าย ================= */}
                     <div className="w-1/3 flex flex-col items-center">
-                        {/* รูปภาพโปรไฟล์ */}
-                        <div className="mt-6 w-36 h-36 rounded-full bg-[#C2C2C2] flex items-center justify-center">
-                            <p className="text-7xl text-white">ส</p>
+                        <div className="mt-6 w-36 h-36 rounded-full bg-[#C2C2C2] flex items-center justify-center overflow-hidden">
+                            <p className="text-7xl text-white">{currentUser.firstName ? currentUser.firstName.charAt(0) : "U"}</p>
                         </div>
 
                         <p className="text-3xl font-semibold mt-4">
-                            สมชาย ใจดี
+                            {currentUser.firstName} {currentUser.lastName}
                         </p>
                         <p className="text-lg mb-3 font-[Montserrat]">
-                            HR Manager
+                            {currentUser.position}
                         </p>
 
                         <span className="px-4 py-1 text-sm rounded-full bg-green-100 text-green-600 mb-6">
                             Active
                         </span>
 
-                        {/* ข้อมูลใต้รูป */}
                         <div className="space-y-4 text-gray-500 w-full max-w-xs">
                             <div className="flex items-center gap-3">
                                 <Mail size={20} />
-                                <span>somchai@company.com</span>
+                                <span className="truncate">{currentUser.email}</span>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 <Phone size={20} />
-                                <span>083-456-7890</span>
+                                <span>{currentUser.phone}</span>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 <Building2 size={20} />
-                                <span>Human Resources</span>
+                                <span>{currentUser.department}</span>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 <Calendar size={20} />
-                                <span>เริ่มงาน 8 มกราคม 2564</span>
+                                <span>เริ่มงาน {currentUser.startDate}</span>
                             </div>
                         </div>
                     </div>
-
-                    {/* ================= ฝั่งซ้าย ================= */}
                     <div className="w-2/3">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-3xl font-bold">
@@ -94,64 +151,63 @@ export default function Profile() {
                         </div>
 
                         <p className="mb-8">
-                            รหัสพนักงาน <span className="ml-2 font-medium">EH001</span>
+                            รหัสพนักงาน <span className="ml-2 font-medium">{currentUser.employeeCode}</span>
                         </p>
 
-                        {/* ข้อมูลส่วนตัว */}
                         <div className="grid grid-cols-2 gap-6">
-                            {/* ชื่อ */}
                             <div>
                                 <label className="block mb-1">ชื่อ</label>
                                 <input
-                                    defaultValue="สมชาย"
-                                    disabled={!isEdit}
+                                    name="firstName"
+                                    value={formData.firstName || ''}
+                                    disabled={true}
                                     className={`w-full border rounded-md px-4 py-2
-                                        ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
+                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
 
-                            {/* นามสกุล */}
                             <div>
                                 <label className="block mb-1">นามสกุล</label>
                                 <input
-                                    defaultValue="ใจดี"
-                                    disabled={!isEdit}
+                                    name="lastName"
+                                    value={formData.lastName || ''}
+                                    disabled={true}
                                     className={`w-full border rounded-md px-4 py-2
-                                        ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
+                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" :"border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
 
-                            {/* อีเมล */}
                             <div>
                                 <label className="block mb-1">อีเมล</label>
                                 <input
-                                    defaultValue="somchai@company.com"
-                                    disabled={!isEdit}
+                                    name="email"
+                                    value={formData.email || ''}
+                                    disabled={true}
                                     className={`w-full border rounded-md px-4 py-2
-                                        ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
+                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
 
-                            {/* เบอร์โทรศัพท์ */}
                             <div>
                                 <label className="block mb-1">เบอร์โทรศัพท์</label>
                                 <input
-                                    defaultValue="083-456-7890"
+                                    name="phone"
+                                    value={formData.phone || ''}
+                                    onChange={handleChange}
                                     disabled={!isEdit}
-                                    className={`w-full border rounded-md px-4 py-2
-                                        ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
+                                    className="w-full border rounded-md px-4 py-2 border-gray-400 bg-white text-black"
                                 />
                             </div>
 
-                            {/* ที่อยู่ */}
                             <div className="col-span-2">
                                 <label className="block mb-1">ที่อยู่</label>
                                 <textarea
+                                    name="address"
                                     rows={3}
-                                    defaultValue="123/45 ม.สุขใจ ถ.พหลโยธิน ซ.10 แขวงสามเสนใน เขตพญาไท กทม. 10400"
+                                    value={formData.address || ''}
+                                    onChange={handleChange}
                                     disabled={!isEdit}
-                                    className={`w-full border rounded-md px-4 py-2
-                                        ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
+                                    className="w-full border rounded-md px-4 py-2 border-gray-400 bg-white text-black"
                                 />
                             </div>
 
@@ -159,10 +215,11 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">แผนก</label>
                                 <input
-                                    defaultValue="Human Resources"
-                                    disabled={!isEdit}
+                                    name="department"
+                                    value={formData.department || ''}
+                                    disabled={true}
                                     className={`w-full border rounded-md px-4 py-2
-                                        ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
+                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
 
@@ -170,26 +227,27 @@ export default function Profile() {
                             <div>
                                 <label className="block mb-1">ตำแหน่ง</label>
                                 <input
-                                    defaultValue="HR Manager"
-                                    disabled={!isEdit}
+                                    name="position"
+                                    value={formData.position || ''}
+                                    disabled={true}
                                     className={`w-full border rounded-md px-4 py-2
-                                        ${isEdit ? "border-gray-400" : "bg-gray-100 pointer-events-none"}`}
+                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
                         </div>
 
-                        {/* ปุ่มยกเลิกกับปุ่มบันทึก */}
                         {isEdit && (
                             <div className="flex justify-end gap-4 mt-10">
                                 <button
-                                    onClick={() => setIsEdit(false)}
-                                    className="px-6 py-2 rounded-lg bg-gray-300"
+                                    onClick={handleCancel}
+                                    className="px-6 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition"
                                 >
                                     ยกเลิก
                                 </button>
 
                                 <button
-                                    className="px-6 py-2 rounded-lg bg-[#DF5E10] text-white"
+                                    onClick={handleSave}
+                                    className="px-6 py-2 rounded-lg bg-[#DF5E10] text-white hover:bg-[#c34e0b] transition"
                                 >
                                     บันทึกการเปลี่ยนแปลง
                                 </button>
