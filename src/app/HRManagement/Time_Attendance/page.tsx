@@ -22,7 +22,6 @@ export default function Time_Attendance() {
 
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isDataLoaded, setIsDataLoaded] = useState(false)
-  const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
   const CURRENT_EMPLOYEE_CODE = "EH001"
 
   const pathname = usePathname()
@@ -156,12 +155,6 @@ export default function Time_Attendance() {
     }
 
     const now = new Date()
-    const canCheckOut = now.getHours() > 17 || (now.getHours() === 17 && now.getMinutes() >= 0)
-
-    if (!canCheckOut) {
-      setShowCheckoutWarning(true)
-      return
-    }
 
     const timeNow = formatTime(now)
     const isOvertime = now.getHours() >= 18
@@ -243,7 +236,7 @@ export default function Time_Attendance() {
                 onClick={handleCheckIn}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl text-lg font-medium transition-colors
                   ${isCheckedIn 
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-green-100 text-green-700 hover:bg-green-200"}`}
               >
                 <LogIn /> ลงเวลาเข้างาน
@@ -338,19 +331,6 @@ export default function Time_Attendance() {
           </div>
         </div>
       </div>
-
-      {showCheckoutWarning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-[#E0E0E0] rounded-3xl px-14 py-12 w-130 text-center">
-            <LogOut size={56} className="mx-auto mb-6" />
-            <h2 className="text-3xl font-bold mb-4">ลงเวลาออกงาน</h2>
-            <p className="text-2xl font-bold text-[#E5531A] mb-10">หลังจากเวลา 17:00 เท่านั้น</p>
-            <button onClick={() => setShowCheckoutWarning(false)} className="bg-[#E1874A] text-white text-2xl font-bold px-14 py-4 rounded-full">
-              ตกลง
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
