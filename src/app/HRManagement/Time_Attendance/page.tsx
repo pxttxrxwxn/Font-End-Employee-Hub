@@ -7,12 +7,14 @@ import Sidebar from "@/app/components/SidebarHRManagement"
 import { Clock, CalendarDays, LogIn, LogOut, Bell, User } from "lucide-react"
 
 type HistoryItem = {
+  employeeCode: string
   date: string
   checkIn: string
   checkOut: string
   inType: string
   outType: string
   status: string
+  activityStatus: string
 }
 
 export default function Time_Attendance() {
@@ -21,7 +23,8 @@ export default function Time_Attendance() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isDataLoaded, setIsDataLoaded] = useState(false)
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
-  
+  const CURRENT_EMPLOYEE_CODE = "EH001"
+
   const pathname = usePathname()
   const isMyAttendance = pathname === "/HRManagement/Time_Attendance"
   const isHRManagement = pathname === "/HRManagement/Time_Attendance/Time_management_HR"
@@ -123,20 +126,24 @@ export default function Time_Attendance() {
         const newHistory = [...prev]
         newHistory[existingRecordIndex] = {
           ...newHistory[existingRecordIndex],
+          employeeCode: CURRENT_EMPLOYEE_CODE,
           checkOut: "--:--",
           outType: "ไม่ใช้งาน",
           status: "รอดำเนินการ",
+          activityStatus: "Active",
         }
         return newHistory
       })
     } else {
       const newRecord: HistoryItem = {
+        employeeCode: CURRENT_EMPLOYEE_CODE,
         date: dateNow,
         checkIn: timeNow,
         checkOut: "--:--",
         inType: isLate(now) ? "มาสาย" : "ปกติ",
         outType: "ไม่ใช้งาน",
         status: "รอดำเนินการ",
+        activityStatus: "Active",
       }
       setHistory((prev) => [newRecord, ...prev])
     }
@@ -167,6 +174,7 @@ export default function Time_Attendance() {
               checkOut: timeNow,
               outType: isOvertime ? "ล่วงเวลา" : "ปกติ",
               status: "อนุมัติแล้ว",
+              activityStatus: "Inactive",
             }
           : item
       )
