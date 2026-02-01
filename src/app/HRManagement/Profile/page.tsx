@@ -17,14 +17,28 @@ type Employee = {
     address: string
 }
 
+type HistoryItem = {
+    employeeCode: string
+    date: string
+    checkIn: string
+    checkOut: string
+    inType: string
+    outType: string
+    status: string
+    activityStatus: string
+}
+
 export default function Profile() {
     const [isEdit, setIsEdit] = useState(false)
     const [currentUser, setCurrentUser] = useState<Employee | null>(null)
     const [formData, setFormData] = useState<Partial<Employee>>({})
 
+    const [activityStatus, setActivityStatus] = useState<string>("Inactive")
+
     useEffect(() => {
         const loadData = () => {
             try {
+
                 const storedData = localStorage.getItem("employees_data")
                 if (storedData) {
                     const employees: Employee[] = JSON.parse(storedData)
@@ -35,6 +49,22 @@ export default function Profile() {
                         setFormData(targetEmployee)
                     } else {
                         console.error("Employee EH001 not found")
+                    }
+                }
+
+                const historyData = localStorage.getItem("timeAttendanceHistory")
+                if (historyData) {
+                    const history: HistoryItem[] = JSON.parse(historyData)
+
+                    const myHistory = history.filter(item => item.employeeCode === "EH001")
+
+                    if (myHistory.length > 0) {
+                        const latestEntry = myHistory[myHistory.length - 1]
+                        if (latestEntry.activityStatus) {
+                            setActivityStatus(latestEntry.activityStatus)
+                        }
+                    } else {
+                        setActivityStatus("Inactive")
                     }
                 }
             } catch (err) {
@@ -78,6 +108,15 @@ export default function Profile() {
         setIsEdit(false)
     }
 
+    const getStatusColorClass = (status: string) => {
+        const s = (status || '').toLowerCase();
+        
+        if (s === 'active' || s === 'working' || s === 'online') return 'bg-green-100 text-green-600';
+        if (s === 'late' || s === 'absent') return 'bg-red-100 text-red-600';
+        if (s === 'leave' || s === 'holiday' || s === 'break') return 'bg-yellow-100 text-yellow-600';
+        return 'bg-gray-100 text-gray-600';
+    }
+
     if (!currentUser) return <div className="p-10">Loading Profile... (Ensure &apos;employees_data&apos; exists in localStorage)</div>
 
     return (
@@ -107,8 +146,8 @@ export default function Profile() {
                             {currentUser.position}
                         </p>
 
-                        <span className="px-4 py-1 text-sm rounded-full bg-green-100 text-green-600 mb-6">
-                            Active
+                        <span className={`px-4 py-1 text-sm rounded-full mb-6 font-medium ${getStatusColorClass(activityStatus)}`}>
+                            {activityStatus}
                         </span>
 
                         <div className="space-y-4 text-gray-500 w-full max-w-xs">
@@ -173,7 +212,7 @@ export default function Profile() {
                                     value={formData.lastName || ''}
                                     disabled={true}
                                     className={`w-full border rounded-md px-4 py-2
-                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" :"border-gray-400 bg-white text-black"}`}
+                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
 
@@ -211,7 +250,6 @@ export default function Profile() {
                                 />
                             </div>
 
-                            {/* แผนก */}
                             <div>
                                 <label className="block mb-1">แผนก</label>
                                 <input
@@ -223,7 +261,6 @@ export default function Profile() {
                                 />
                             </div>
 
-                            {/* ตำแหน่ง */}
                             <div>
                                 <label className="block mb-1">ตำแหน่ง</label>
                                 <input
