@@ -16,7 +16,6 @@ type HRTimeItem = {
   status: string
 }
 
-/* ================== mock ================== */
 const mockData: HRTimeItem[] = [
   {
     name: "สมชาย ใจดี",
@@ -38,7 +37,7 @@ const typeBadge = (type: string) => {
     case "ล่วงเวลา":
       return "bg-sky-200 text-sky-700"
     default:
-      return "bg-gray-200 text-gray-500"
+      return "bg-[#C2C2C2] text-[#6D6D6D]"
   }
 }
 
@@ -52,7 +51,7 @@ const statusBadge = (status: string) => {
     case "ไม่อนุมัติ":
       return "bg-red-200 text-red-700"
     default:
-      return "bg-gray-200 text-gray-500"
+      return "bg-[#C2C2C2] text-[#6D6D6D]"
   }
 }
 
