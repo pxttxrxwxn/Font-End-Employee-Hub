@@ -19,12 +19,6 @@ type Employee = {
 
 type HistoryItem = {
     employeeCode: string
-    date: string
-    checkIn: string
-    checkOut: string
-    inType: string
-    outType: string
-    status: string
     activityStatus: string
 }
 
@@ -32,7 +26,6 @@ export default function Profile() {
     const [isEdit, setIsEdit] = useState(false)
     const [currentUser, setCurrentUser] = useState<Employee | null>(null)
     const [formData, setFormData] = useState<Partial<Employee>>({})
-
     const [activityStatus, setActivityStatus] = useState<string>("Inactive")
 
     useEffect(() => {
@@ -114,7 +107,7 @@ export default function Profile() {
         if (s === 'active' || s === 'working' || s === 'online') return 'bg-green-100 text-green-600';
         if (s === 'late' || s === 'absent') return 'bg-red-100 text-red-600';
         if (s === 'leave' || s === 'holiday' || s === 'break') return 'bg-yellow-100 text-yellow-600';
-        return 'bg-gray-100 text-gray-600';
+        return 'bg-[#C2C2C2] text-[#6D6D6D]';
     }
 
     if (!currentUser) return <div className="p-10">Loading Profile... (Ensure &apos;employees_data&apos; exists in localStorage)</div>
