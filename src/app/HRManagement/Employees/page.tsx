@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState, InputHTMLAttributes, SelectHTMLAttributes } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Search, Plus, Mail, Phone, MoreHorizontal, X, Bell, AlertTriangle
-} from "lucide-react"
+import { Search, Plus, Mail, Phone, MoreHorizontal, X, Bell, AlertTriangle } from "lucide-react"
 
 interface PositionData {
   en: string;
@@ -36,6 +35,11 @@ type Employee = {
   address: string
 }
 
+type HistoryItem = {
+  employeeCode: string
+  activityStatus: string
+}
+
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
 }
@@ -46,6 +50,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 const STORAGE_KEY = "employees_data"
+const HISTORY_KEY = "timeAttendanceHistory"
 
 export default function Employees() {
   const [showModal, setShowModal] = useState(false)
@@ -55,6 +60,8 @@ export default function Employees() {
   const [departmentsData, setDepartmentsData] = useState<DepartmentData[]>([])
   const [rolesData, setRolesData] = useState<RoleData[]>([])
 
+  const [attendanceStatusMap, setAttendanceStatusMap] = useState<Record<string, string>>({})
+
   const [employees, setEmployees] = useState<Employee[]>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -62,15 +69,17 @@ export default function Employees() {
     }
     return []
   })
+
   const filteredEmployees = employees.filter((emp) => {
     const search = searchTerm.toLowerCase();
     const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
     
     return (
-      emp.employeeCode.toLowerCase().includes(search) || 
+      emp.employeeCode.toLowerCase().includes(search) ||
       fullName.includes(search)
     );
   });
+
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
 
   const [form, setForm] = useState<Employee>({
@@ -96,6 +105,23 @@ export default function Employees() {
       const roleStr = localStorage.getItem("hr_roles");
       if (roleStr) {
         setRolesData(JSON.parse(roleStr));
+      }
+
+      const historyStr = localStorage.getItem(HISTORY_KEY);
+      if (historyStr) {
+        try {
+          const historyData: HistoryItem[] = JSON.parse(historyStr);
+          const statusMap: Record<string, string> = {};
+          
+          historyData.forEach((item) => {
+            if(item.employeeCode) {
+                statusMap[item.employeeCode] = item.activityStatus;
+            }
+          });
+          setAttendanceStatusMap(statusMap);
+        } catch (error) {
+          console.error("Error parsing timeAttendanceHistory:", error);
+        }
       }
     }, 0);
 
@@ -184,6 +210,20 @@ export default function Employees() {
     setShowDetail(false)
     setSelectedEmployee(null)
   }
+  const getStatusColorClass = (status: string) => {
+    const s = (status || '').toLowerCase();
+    
+    if (s === 'active') return 'bg-green-100 text-green-600';
+    return 'bg-[#C2C2C2] text-[#6D6D6D]';
+  }
+  const getStatusInfo = (employeeCode: string) => {
+    const status = attendanceStatusMap[employeeCode] || "Inactive";
+
+    return {
+      text: status,
+      className: getStatusColorClass(status)
+    };
+  };
 
   return (
     <div className="flex min-h-screen bg-white font-[Prompt] text-black">
@@ -198,7 +238,6 @@ export default function Employees() {
             <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
           </button>
         </div>
-
         <div className="flex items-center justify-between mb-10">
           <div className="relative w-80">
             <Search
@@ -222,55 +261,59 @@ export default function Employees() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredEmployees.map((emp) => (
-            <div
-              key={emp.employeeCode}
-              className="bg-gray-100 rounded-2xl p-6 relative"
-            >
-              <MoreHorizontal
-                className="absolute top-4 right-4 text-gray-500 cursor-pointer"
-                onClick={() => {
-                  setSelectedEmployee(emp)
-                  setShowDetail(true)
-                }}
-              />
+          {filteredEmployees.map((emp) => {
+            const statusInfo = getStatusInfo(emp.employeeCode);
 
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-full bg-gray-400 flex items-center justify-center text-xl font-bold text-white">
-                  {emp.firstName?.[0]}
+            return (
+              <div
+                key={emp.employeeCode}
+                className="bg-gray-100 rounded-2xl p-6 relative"
+              >
+                <MoreHorizontal
+                  className="absolute top-4 right-4 text-gray-500 cursor-pointer"
+                  onClick={() => {
+                    setSelectedEmployee(emp)
+                    setShowDetail(true)
+                  }}
+                />
+
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-full bg-gray-400 flex items-center justify-center text-xl font-bold text-white">
+                    {emp.firstName?.[0]}
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-lg">
+                      {emp.firstName} {emp.lastName}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      {emp.position}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="font-semibold text-lg">
-                    {emp.firstName} {emp.lastName}
-                  </p>
-                  <p className="text-gray-600 text-sm">
-                    {emp.position}
-                  </p>
+                <div className="space-y-3 text-gray-700 text-sm">
+                  <div className="flex items-center gap-3">
+                    <Mail size={16} />
+                    {emp.email}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Phone size={16} />
+                    {emp.phone}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-6">
+                  <span className="text-gray-500 text-sm">
+                    {emp.department}
+                  </span>
+                  <span className={`${statusInfo.className} px-3 py-1 rounded-full text-xs`}>
+                    {statusInfo.text}
+                  </span>
                 </div>
               </div>
-
-              <div className="space-y-3 text-gray-700 text-sm">
-                <div className="flex items-center gap-3">
-                  <Mail size={16} />
-                  {emp.email}
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone size={16} />
-                  {emp.phone}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mt-6">
-                <span className="text-gray-500 text-sm">
-                  {emp.department}
-                </span>
-                <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-xs">
-                  Active
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
