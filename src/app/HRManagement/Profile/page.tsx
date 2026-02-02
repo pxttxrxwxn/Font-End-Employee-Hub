@@ -48,11 +48,11 @@ export default function Profile() {
                 const historyData = localStorage.getItem("timeAttendanceHistory")
                 if (historyData) {
                     const history: HistoryItem[] = JSON.parse(historyData)
-
                     const myHistory = history.filter(item => item.employeeCode === "EH001")
 
                     if (myHistory.length > 0) {
-                        const latestEntry = myHistory[myHistory.length - 1]
+                        const latestEntry = myHistory[0]
+
                         if (latestEntry.activityStatus) {
                             setActivityStatus(latestEntry.activityStatus)
                         }
@@ -104,9 +104,7 @@ export default function Profile() {
     const getStatusColorClass = (status: string) => {
         const s = (status || '').toLowerCase();
         
-        if (s === 'active' || s === 'working' || s === 'online') return 'bg-green-100 text-green-600';
-        if (s === 'late' || s === 'absent') return 'bg-red-100 text-red-600';
-        if (s === 'leave' || s === 'holiday' || s === 'break') return 'bg-yellow-100 text-yellow-600';
+        if (s === 'active') return 'bg-green-100 text-green-600';
         return 'bg-[#C2C2C2] text-[#6D6D6D]';
     }
 
