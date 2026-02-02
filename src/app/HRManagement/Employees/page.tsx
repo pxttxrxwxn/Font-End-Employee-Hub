@@ -114,7 +114,7 @@ export default function Employees() {
           const statusMap: Record<string, string> = {};
           
           historyData.forEach((item) => {
-            if(item.employeeCode) {
+            if(item.employeeCode && !statusMap[item.employeeCode]) {
                 statusMap[item.employeeCode] = item.activityStatus;
             }
           });
