@@ -256,6 +256,7 @@ export default function Leave_Request() {
                                     <option value="ลาป่วย">ลาป่วย</option>
                                     <option value="ลากิจ">ลากิจ</option>
                                     <option value="ลาพักร้อน">ลาพักร้อน</option>
+                                    <option value="ลาคลอด">ลาคลอด</option>
                                 </select>
                             </div>
 
