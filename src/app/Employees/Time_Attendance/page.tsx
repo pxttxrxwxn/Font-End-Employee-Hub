@@ -27,22 +27,20 @@ export default function Time_Attendance() {
   const [checkIn, setCheckIn] = useState("--:--")
   const [checkOut, setCheckOut] = useState("--:--")
 
-
   const [history, setHistory] = useState<HistoryItem[]>(() => {
-  if (typeof window !== "undefined") {
-    try {
-      const storedData = localStorage.getItem("timeAttendanceHistory")
-      const parsed = storedData ? JSON.parse(storedData) : []
-
-      
-      return Array.isArray(parsed) ? parsed : []
-    } catch (error) {
-      console.error("Invalid localStorage data", error)
-      return []
+    if (typeof window !== "undefined") {
+      try {
+        const storedData = localStorage.getItem("timeAttendanceHistory")
+        const parsed = storedData ? JSON.parse(storedData) : []
+        return Array.isArray(parsed) ? parsed : []
+      } catch (error) {
+        console.error("Invalid localStorage data", error)
+        return []
+      }
     }
-  }
-  return []
-})
+    return []
+  })
+
   const [showCheckoutWarning, setShowCheckoutWarning] = useState(false)
   const [isCheckedIn, setIsCheckedIn] = useState(false)
   const pathname = usePathname()
@@ -53,13 +51,28 @@ export default function Time_Attendance() {
   const isHRManagement =
     pathname === "/HRManagement/Time_Attendance/Time_management_HR"
 
-  
+  /* ✅ เก็บ history */
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
         "timeAttendanceHistory",
         JSON.stringify(history)
       )
+    }
+  }, [history])
+
+  /* ✅ SYNC สถานะจาก history (หัวใจของการแก้) */
+  useEffect(() => {
+    if (history.length > 0) {
+      const last = history[0]
+
+      if (last.checkOut === "--:--") {
+        setIsCheckedIn(true)
+        setCheckIn(last.checkIn)
+        setCheckOut("--:--")
+      } else {
+        setIsCheckedIn(false)
+      }
     }
   }, [history])
 
@@ -131,6 +144,8 @@ export default function Time_Attendance() {
   }
 
   const handleCheckOut = () => {
+    if (!isCheckedIn) return
+
     const now = new Date()
 
     if (!canCheckOut(now)) {
@@ -187,6 +202,7 @@ export default function Time_Attendance() {
       <Sidebar />
 
       <div className="flex-1 px-10 py-8 flex flex-col gap-10">
+
         
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#DF5E10]">
