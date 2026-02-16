@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Bell, Plus, X, Users, Trash2, Pen, Shield, Key, AlertTriangle } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 interface Role {
     id: number;
@@ -18,19 +19,6 @@ interface RoleFormData {
     nameTH: string;
     description: string;
     permissions: string[];
-}
-
-interface EmployeeRecord {
-    employeeCode: string
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    department: string
-    position: string
-    startDate: string
-    role: string
-    address: string
 }
 
 const PERMISSIONS_LIST = [
@@ -51,6 +39,7 @@ export default function Roles() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -61,33 +50,20 @@ export default function Roles() {
         permissions: []
     });
 
+    const fetchRoles = async () => {
+        try {
+            setIsLoading(true);
+            const data = await apiFetch('/roles');
+            setRoles(data);
+        } catch (error) {
+            console.error("Failed to fetch roles:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const loadData = () => {
-            const savedRoles = localStorage.getItem("hr_roles");
-            const savedEmployees = localStorage.getItem("employees_data");
-            
-            if (savedRoles) {
-                let rolesList: Role[] = JSON.parse(savedRoles);
-
-                if (savedEmployees) {
-                    const employees: EmployeeRecord[] = JSON.parse(savedEmployees);
-                    
-                    rolesList = rolesList.map(role => {
-                        const count = employees.filter(emp =>
-                            emp.role === role.nameEN || emp.role === role.nameTH
-                        ).length;
-                        
-                        return { ...role, userCount: count };
-                    });
-                }
-                
-                setRoles(rolesList);
-            }
-        };
-
-        loadData();
-        window.addEventListener('focus', loadData);
-        return () => window.removeEventListener('focus', loadData);
+        fetchRoles();
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -123,35 +99,38 @@ export default function Roles() {
         setIsModalOpen(false);
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.nameEN.trim() || !formData.nameTH.trim() || formData.permissions.length === 0) {
             alert("กรุณากรอกข้อมูล ชื่อบทบาท (TH/EN) และเลือกสิทธิ์อย่างน้อย 1 รายการ");
             return;
         }
 
-        let updatedRoles: Role[];
-
-        if (editingId !== null) {
-            updatedRoles = roles.map(role =>
-                role.id === editingId
-                ? { ...role, ...formData }
-                : role
-            );
-        } else {
-            const newRole: Role = {
-                id: Date.now(),
+        try {
+            const payload = {
                 nameTH: formData.nameTH,
                 nameEN: formData.nameEN,
                 description: formData.description,
-                userCount: 0,
                 permissions: formData.permissions
             };
-            updatedRoles = [...roles, newRole];
-        }
 
-        setRoles(updatedRoles);
-        localStorage.setItem("hr_roles", JSON.stringify(updatedRoles));
-        resetForm();
+            if (editingId !== null) {
+                await apiFetch(`/roles/${editingId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                await apiFetch('/roles', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            }
+            await fetchRoles();
+            resetForm();
+
+        } catch (error) {
+            console.error("Error saving role:", error);
+            alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        }
     };
 
     const handleDeleteClick = (id: number) => {
@@ -159,14 +138,20 @@ export default function Roles() {
         setShowDeleteModal(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deleteId !== null) {
-            const updatedRoles = roles.filter(r => r.id !== deleteId);
-            setRoles(updatedRoles);
-            localStorage.setItem("hr_roles", JSON.stringify(updatedRoles));
-            
-            setShowDeleteModal(false);
-            setDeleteId(null);
+            try {
+                await apiFetch(`/roles/${deleteId}`, {
+                    method: 'DELETE'
+                });
+                
+                await fetchRoles();
+                setShowDeleteModal(false);
+                setDeleteId(null);
+            } catch (error) {
+                console.error("Error deleting role:", error);
+                alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+            }
         }
     };
 
@@ -202,66 +187,67 @@ export default function Roles() {
                         เพิ่มบทบาท
                     </div>
                 </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full">
-                    {roles.map((role) => (
-                        <div key={role.id} className="bg-[#F8F9FA] rounded-xl p-6 relative shadow-sm border border-[#000000] flex flex-col h-full">
-                            <div className="absolute top-4 right-4 flex gap-2 z-10">
-                                <Pen
-                                    size={18}
-                                    onClick={() => handleEdit(role)}
-                                    className="text-[#6D6D6D] cursor-pointer hover:text-blue-500"
-                                />
-                                <Trash2
-                                    size={18}
-                                    onClick={() => handleDeleteClick(role.id)}
-                                    className="text-[#D03E11] cursor-pointer hover:text-red-500"
-                                />
-                            </div>
-
-                            <div className="flex items-start gap-4 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
-                                <div className="p-1">
-                                    <Shield size={40} className="text-black" />
+                {isLoading ? (
+                    <div className="text-center py-10 text-gray-500">กำลังโหลดข้อมูล...</div>
+                ) : (
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full">
+                        {roles.map((role) => (
+                            <div key={role.id} className="bg-[#F8F9FA] rounded-xl p-6 relative shadow-sm border border-[#000000] flex flex-col h-full">
+                                <div className="absolute top-4 right-4 flex gap-2 z-10">
+                                    <Pen
+                                        size={18}
+                                        onClick={() => handleEdit(role)}
+                                        className="text-[#6D6D6D] cursor-pointer hover:text-blue-500"
+                                    />
+                                    <Trash2
+                                        size={18}
+                                        onClick={() => handleDeleteClick(role.id)}
+                                        className="text-[#D03E11] cursor-pointer hover:text-red-500"
+                                    />
                                 </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-black">{role.nameTH}</h3>
-                                    <p className="text-gray-500 text-sm">{role.nameEN}</p>
+
+                                <div className="flex items-start gap-4 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
+                                    <div className="p-1">
+                                        <Shield size={40} className="text-black" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-black">{role.nameTH}</h3>
+                                        <p className="text-gray-500 text-sm">{role.nameEN}</p>
+                                    </div>
+                                </div>
+
+                                <p className="text-gray-500 text-sm mb-4 min-h-10 line-clamp-2">
+                                    {role.description || "-"}
+                                </p>
+
+                                <div className="flex items-center gap-2 text-blue-600 mb-4 text-sm font-medium">
+                                    <Users size={18} />
+                                    <span className="text-black">{role.userCount} <span className="text-[#6D6D6D]">ผู้ใช้งาน</span></span>
+                                </div>
+
+                                <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
+                                    <span className="text-gray-400 text-xs flex items-center gap-1">
+                                        <Key size={12} /> สิทธิ์การเข้าถึง
+                                    </span>
+                                    <div className="w-full flex flex-wrap gap-2 mt-1">
+                                        {role.permissions.slice(0, 10).map((permId) => (
+                                            <span key={permId} className="bg-[#1C3F78] text-white text-[10px] px-3 py-1 rounded-full">
+                                                {getPermissionLabel(permId)}
+                                            </span>
+                                        ))}
+                                        {role.permissions.length > 10 && (
+                                            <span className="text-gray-500 text-[10px] px-2 py-1">+{role.permissions.length - 10}</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-
-                            <p className="text-gray-500 text-sm mb-4 min-h-10 line-clamp-2">
-                                {role.description || "-"}
-                            </p>
-
-                            <div className="flex items-center gap-2 text-blue-600 mb-4 text-sm font-medium">
-                                <Users size={18} />
-                                <span className="text-black">{role.userCount} <span className="text-[#6D6D6D]">ผู้ใช้งาน</span></span>
-                            </div>
-
-                            <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
-                                <span className="text-gray-400 text-xs flex items-center gap-1">
-                                    <Key size={12} /> สิทธิ์การเข้าถึง
-                                </span>
-                                <div className="w-full flex flex-wrap gap-2 mt-1">
-                                    {role.permissions.slice(0, 10).map((permId) => (
-                                        <span key={permId} className="bg-[#1C3F78] text-white text-[10px] px-3 py-1 rounded-full">
-                                            {getPermissionLabel(permId)}
-                                        </span>
-                                    ))}
-                                    {role.permissions.length > 10 && (
-                                        <span className="text-gray-500 text-[10px] px-2 py-1">+{role.permissions.length - 10}</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
-
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center font-[Prompt] bg-black/40">
                     <div className="bg-[#F2EEEE] w-200 max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl p-8 relative animate-in fade-in zoom-in duration-200">
-                        {/* ... (เนื้อหา Modal เดิม) ... */}
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-[#134BA1]">
                                 {editingId ? "แก้ไขบทบาท" : "เพิ่มบทบาทใหม่"}
@@ -357,7 +343,6 @@ export default function Roles() {
                 </div>
             )}
 
-            {/* --- Popup ยืนยันการลบ (ส่วนที่เพิ่มใหม่) --- */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
                     <div className="bg-white w-100 rounded-xl p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
