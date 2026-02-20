@@ -3,7 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {User,Clock,FileText,LogOut,} from "lucide-react";
+import { User, Clock, FileText, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { apiFetch } from "../utils/api";
+
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  department: string;
+  position: string;
+  role: string;
+}
 
 const menus = [
   { icon: User, label: "โปรไฟล์พนักงาน", sub: "Profile", path: "/Employees/Profile" },
@@ -11,8 +21,22 @@ const menus = [
   { icon: FileText, label: "คำร้องขอลา", sub: "Leave Requests", path: "/Employees/Leave_Request" },
 ];
 
-export default function Sidebar() {
+export default function SidebarEmployees() {
   const pathname = usePathname();
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await apiFetch('/api/profile');
+        setUser(data);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   return (
     <aside className="h-screen w-72 bg-[#07234D] text-white sticky top-0">
@@ -27,7 +51,9 @@ export default function Sidebar() {
         </div>
         <div className="flex flex-col px-4 py-5">
           <h1 className="text-lg font-semibold">Employee Hub</h1>
-          <p className="text-xs text-gray-400 font-[montserrat]">Software Development</p>
+          <p className="text-xs text-gray-400 font-[montserrat]">
+            {user?.department || "Loading..."}
+          </p>
         </div>
       </div>
 
@@ -56,11 +82,15 @@ export default function Sidebar() {
       <div className="absolute bottom-0 w-72 px-4 py-4 border-t border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-            ส
+            {user?.firstName ? user.firstName.charAt(0) : "U"}
           </div>
           <div className="flex-1">
-            <p className="text-sm font-[Prompt]">นภา สดใส</p>
-            <p className="text-xs text-gray-400 font-[montserrat]">System Analyst</p>
+            <p className="text-sm font-[Prompt]">
+              {user ? `${user.firstName} ${user.lastName}` : "Loading..."}
+            </p>
+            <p className="text-xs text-gray-400 font-[montserrat]">
+              {user?.position || "Loading..."}
+            </p>
           </div>
           <Link href="/">
             <LogOut size={18} className="text-gray-400 cursor-pointer hover:text-white" />
