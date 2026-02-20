@@ -1,5 +1,5 @@
 // const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-const API_URL = 'http://localhost:8787';
+export const API_URL = 'http://localhost:8787';
 
 const getToken = () => {
     if (typeof window !== 'undefined') {
@@ -14,15 +14,22 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     const res = await fetch(`${API_URL}${endpoint}`, {
         ...options,
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        ...options.headers,
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...options.headers,
         },
     });
 
-    if (!res.ok) {
-        throw new Error(`API Error: ${res.statusText}`);
+    let data;
+    try {
+        data = await res.json();
+    } catch {
+        data = null;
     }
 
-    return res.json();
+    if (!res.ok) {
+        throw new Error(data?.error || data?.message || `API Error: ${res.statusText}`);
+    }
+
+    return data;
 };
