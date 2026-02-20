@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-// 1. เพิ่ม useCallback เข้าไปใน import
 import React, { useEffect, useState, useCallback } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Clock, CalendarDays, LogIn, LogOut, Bell, User } from "lucide-react"
@@ -28,7 +27,6 @@ export default function Time_Attendance() {
   const isMyAttendance = pathname === "/HRManagement/Time_Attendance" || pathname === "/Employees/Time_Attendance"
   const isHRManagement = pathname.includes("Time_management_HR")
 
-  // 2. ลบ formatShortDate ออกเพราะไม่ได้ใช้งาน (แก้ ESLint warning)
   
   const formatTime = (date: Date) =>
     date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false })
@@ -45,33 +43,34 @@ export default function Time_Attendance() {
     if (startTimeStr === "--:--") return "0:00"
 
     const [startH, startM] = startTimeStr.split(":").map(Number)
-    const startDate = new Date()
-    startDate.setHours(startH, startM, 0, 0)
+    const startTotalMinutes = (startH * 60) + startM
 
-    let endDate: Date
+    let endTotalMinutes = 0
+
     if (typeof endTimeInput === 'string') {
         if (endTimeInput === "--:--") return "0:00"
         const [endH, endM] = endTimeInput.split(":").map(Number)
-        endDate = new Date()
-        endDate.setHours(endH, endM, 0, 0)
+        endTotalMinutes = (endH * 60) + endM
     } else {
-        endDate = endTimeInput
+        endTotalMinutes = (endTimeInput.getHours() * 60) + endTimeInput.getMinutes()
     }
 
-    const diff = endDate.getTime() - startDate.getTime()
-    if (diff < 0) return "0:00"
+    let diffMinutes = endTotalMinutes - startTotalMinutes
 
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    if (diffMinutes < 0) {
+        diffMinutes += 24 * 60
+    }
+
+    const hours = Math.floor(diffMinutes / 60)
+    const minutes = diffMinutes % 60
 
     return `${hours}:${minutes.toString().padStart(2, "0")}`
   }
 
-  // useCallback ใช้งานได้แล้ว
   const fetchHistory = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await apiFetch('/time-attendance/me') 
+      const data = await apiFetch('/api/time-attendance/me')
       setHistory(data)
     } catch (error) {
       console.error("Failed to fetch history:", error)
@@ -113,7 +112,7 @@ export default function Time_Attendance() {
     const isLate = (d: Date) => d.getHours() > 8 || (d.getHours() === 8 && d.getMinutes() > 30)
 
     try {
-      await apiFetch('/time-attendance/check-in', {
+      await apiFetch('/api/time-attendance/check-in', {
         method: 'POST',
         body: JSON.stringify({
             date: dateNowISO,
@@ -140,7 +139,7 @@ export default function Time_Attendance() {
     const isOvertime = now.getHours() >= 18
 
     try {
-      await apiFetch('/time-attendance/check-out', {
+      await apiFetch('/api/time-attendance/check-out', {
         method: 'POST',
         body: JSON.stringify({
             date: dateNowISO,
