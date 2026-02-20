@@ -1,8 +1,10 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Sidebar from "@/app/components/SidebarEmployees"
 import { Mail, Phone, Building2, Calendar, Pencil, Bell } from "lucide-react"
+
 
 type Employee = {
     employeeCode: string
@@ -15,58 +17,62 @@ type Employee = {
     startDate: string
     role: string
     address: string
-}
-
-type HistoryItem = {
-    employeeCode: string
-    activityStatus: string
+    activityStatus?: string
 }
 
 export default function Profile() {
+    const router = useRouter()
     const [isEdit, setIsEdit] = useState(false)
     const [currentUser, setCurrentUser] = useState<Employee | null>(null)
     const [formData, setFormData] = useState<Partial<Employee>>({})
     const [activityStatus, setActivityStatus] = useState<string>("Inactive")
+    const [loading, setLoading] = useState(true)
+
+    const API_URL = "http://localhost:8787/api"
 
     useEffect(() => {
-        const loadData = () => {
+        const fetchProfile = async () => {
+            const token = localStorage.getItem("token")
+            if (!token) {
+                router.push("/")
+                return
+            }
+
             try {
-
-                const storedData = localStorage.getItem("employees_data")
-                if (storedData) {
-                    const employees: Employee[] = JSON.parse(storedData)
-                    const targetEmployee = employees.find((emp: Employee) => emp.employeeCode === "EH002")
-                    
-                    if (targetEmployee) {
-                        setCurrentUser(targetEmployee)
-                        setFormData(targetEmployee)
-                    } else {
-                        console.error("Employee EH002 not found")
+                const res = await fetch(`${API_URL}/profile`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
                     }
+                })
+
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        localStorage.removeItem("token")
+                        router.push("/")
+                    }
+                    throw new Error("Failed to fetch profile")
                 }
 
-                const historyData = localStorage.getItem("timeAttendanceHistory")
-                if (historyData) {
-                    const history: HistoryItem[] = JSON.parse(historyData)
-                    const myHistory = history.filter(item => item.employeeCode === "EH002")
+                const data: Employee = await res.json()
+                setCurrentUser(data)
+                setFormData(data)
+                setActivityStatus("Active")
 
-                    if (myHistory.length > 0) {
-                        const latestEntry = myHistory[0]
-
-                        if (latestEntry.activityStatus) {
-                            setActivityStatus(latestEntry.activityStatus)
-                        }
-                    } else {
-                        setActivityStatus("Inactive")
-                    }
+                if (data.activityStatus) {
+                    setActivityStatus(data.activityStatus)
+                } else {
+                    setActivityStatus("Inactive")
                 }
+
             } catch (err) {
-                console.error("Error loading data from localStorage:", err)
+                console.error("Error loading data:", err)
+            } finally {
+                setLoading(false)
             }
         }
 
-        loadData()
-    }, [])
+        fetchProfile()
+    }, [router, API_URL])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -76,18 +82,27 @@ export default function Profile() {
         }))
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        const token = localStorage.getItem("token")
         try {
-            const storedData = localStorage.getItem("employees_data")
-            if (storedData) {
-                const employees: Employee[] = JSON.parse(storedData)
-                const updatedEmployees = employees.map((emp: Employee) =>
-                    emp.employeeCode === "EH002" ? { ...emp, ...formData } : emp
-                )
-                localStorage.setItem("employees_data", JSON.stringify(updatedEmployees))
+            const res = await fetch(`${API_URL}/profile`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    phone: formData.phone,
+                    address: formData.address
+                })
+            })
+
+            if (res.ok) {
                 setCurrentUser(formData as Employee)
                 setIsEdit(false)
                 alert("บันทึกข้อมูลเรียบร้อยแล้ว")
+            } else {
+                alert("บันทึกไม่สำเร็จ")
             }
         } catch (error) {
             console.error("Error saving data:", error)
@@ -103,12 +118,12 @@ export default function Profile() {
 
     const getStatusColorClass = (status: string) => {
         const s = (status || '').toLowerCase();
-        
         if (s === 'active') return 'bg-green-100 text-green-600';
         return 'bg-[#C2C2C2] text-[#6D6D6D]';
     }
 
-    if (!currentUser) return <div className="p-10">Loading Profile... (Ensure &apos;employees_data&apos; exists in localStorage)</div>
+    if (loading) return <div className="p-10">Loading Profile...</div>
+    if (!currentUser) return <div className="p-10 text-red-500">Error loading profile. Please login again.</div>
 
     return (
         <div className="flex bg-white font-[Prompt] min-h-screen text-black">
@@ -159,7 +174,7 @@ export default function Profile() {
 
                             <div className="flex items-center gap-3">
                                 <Calendar size={20} />
-                                <span>เริ่มงาน {currentUser.startDate}</span>
+                                <span>เริ่มงาน {new Date(currentUser.startDate).toLocaleDateString('th-TH')}</span>
                             </div>
                         </div>
                     </div>
@@ -185,39 +200,38 @@ export default function Profile() {
                         </p>
 
                         <div className="grid grid-cols-2 gap-6">
+                            {/* ชื่อ - นามสกุล (Disabled) */}
                             <div>
                                 <label className="block mb-1">ชื่อ</label>
                                 <input
                                     name="firstName"
                                     value={formData.firstName || ''}
                                     disabled={true}
-                                    className={`w-full border rounded-md px-4 py-2
-                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
+                                    className="w-full border rounded-md px-4 py-2 bg-gray-100 text-gray-500 pointer-events-none"
                                 />
                             </div>
-
                             <div>
                                 <label className="block mb-1">นามสกุล</label>
                                 <input
                                     name="lastName"
                                     value={formData.lastName || ''}
                                     disabled={true}
-                                    className={`w-full border rounded-md px-4 py-2
-                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
+                                    className="w-full border rounded-md px-4 py-2 bg-gray-100 text-gray-500 pointer-events-none"
                                 />
                             </div>
 
+                            {/* อีเมล (Disabled) */}
                             <div>
                                 <label className="block mb-1">อีเมล</label>
                                 <input
                                     name="email"
                                     value={formData.email || ''}
                                     disabled={true}
-                                    className={`w-full border rounded-md px-4 py-2
-                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
+                                    className="w-full border rounded-md px-4 py-2 bg-gray-100 text-gray-500 pointer-events-none"
                                 />
                             </div>
 
+                            {/* เบอร์โทร (Editable) */}
                             <div>
                                 <label className="block mb-1">เบอร์โทรศัพท์</label>
                                 <input
@@ -225,10 +239,12 @@ export default function Profile() {
                                     value={formData.phone || ''}
                                     onChange={handleChange}
                                     disabled={!isEdit}
-                                    className="w-full border rounded-md px-4 py-2 border-gray-400 bg-white text-black"
+                                    className={`w-full border rounded-md px-4 py-2 
+                                    ${!isEdit ? "bg-gray-100 text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
 
+                            {/* ที่อยู่ (Editable) */}
                             <div className="col-span-2">
                                 <label className="block mb-1">ที่อยู่</label>
                                 <textarea
@@ -237,29 +253,28 @@ export default function Profile() {
                                     value={formData.address || ''}
                                     onChange={handleChange}
                                     disabled={!isEdit}
-                                    className="w-full border rounded-md px-4 py-2 border-gray-400 bg-white text-black"
+                                    className={`w-full border rounded-md px-4 py-2 
+                                    ${!isEdit ? "bg-gray-100 text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
 
+                            {/* แผนก & ตำแหน่ง (Disabled) */}
                             <div>
                                 <label className="block mb-1">แผนก</label>
                                 <input
                                     name="department"
                                     value={formData.department || ''}
                                     disabled={true}
-                                    className={`w-full border rounded-md px-4 py-2
-                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
+                                    className="w-full border rounded-md px-4 py-2 bg-gray-100 text-gray-500 pointer-events-none"
                                 />
                             </div>
-
                             <div>
                                 <label className="block mb-1">ตำแหน่ง</label>
                                 <input
                                     name="position"
                                     value={formData.position || ''}
                                     disabled={true}
-                                    className={`w-full border rounded-md px-4 py-2
-                                    ${isEdit ? "bg-gray-100 pointer-events-none text-gray-500" : "border-gray-400 bg-white text-black"}`}
+                                    className="w-full border rounded-md px-4 py-2 bg-gray-100 text-gray-500 pointer-events-none"
                                 />
                             </div>
                         </div>
