@@ -1,9 +1,6 @@
-// src/app/utils/api.ts
-
 // const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 const API_URL = 'http://localhost:8787';
 
-// สมมติว่าเก็บ Token ไว้ใน LocalStorage หลังจาก Login
 const getToken = () => {
     if (typeof window !== 'undefined') {
         return localStorage.getItem('token');
@@ -18,7 +15,7 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
         ...options,
         headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // ส่ง Token ไปให้ Hono backend
+        'Authorization': `Bearer ${token}`,
         ...options.headers,
         },
     });
