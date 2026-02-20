@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Bell, Plus, X, Trash2, CircleCheck, CircleX, FileText, AlertTriangle } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 interface LeaveRequest {
     id: number;
@@ -17,17 +18,10 @@ interface LeaveRequest {
 
 export default function Leave_Request() {
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [leaveHistory, setLeaveHistory] = useState<LeaveRequest[]>(() => {
-        if (typeof window !== "undefined") {
-            const storedData = localStorage.getItem("leaveRequests")
-            return storedData ? JSON.parse(storedData) : []
-        }
-        return []
-    })
-
-    // --- เพิ่ม State สำหรับ Modal ลบ ---
+    const [leaveHistory, setLeaveHistory] = useState<LeaveRequest[]>([])
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteId, setDeleteId] = useState<number | null>(null)
+    const [refreshKey, setRefreshKey] = useState(0)
 
     const initialFormState = {
         type: "",
@@ -38,6 +32,20 @@ export default function Leave_Request() {
     }
 
     const [formData, setFormData] = useState(initialFormState)
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await apiFetch('/api/leave-requests');
+                setLeaveHistory(data);
+            } catch (error) {
+                console.error("Failed to fetch leave requests:", error);
+            }
+        };
+
+        fetchData();
+    }, [refreshKey]);
+
+    const reloadData = () => setRefreshKey(prev => prev + 1);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -68,17 +76,12 @@ export default function Leave_Request() {
         return diffDays
     }
 
-    const saveToLocalStorage = (data: LeaveRequest[]) => {
-        setLeaveHistory(data)
-        localStorage.setItem("leaveRequests", JSON.stringify(data))
-    }
-
     const closeModal = () => {
         setIsModalOpen(false)
         setFormData(initialFormState)
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.type) {
             alert("กรุณาเลือกประเภทการลา")
             return
@@ -87,43 +90,64 @@ export default function Leave_Request() {
             alert("กรุณาระบุวันที่")
             return
         }
-
         if (formData.endDate < formData.startDate) {
             alert("วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น")
             return
         }
-        const newRequest: LeaveRequest = {
-            id: Date.now(),
-            ...formData,
-            status: "รอพิจารณา",
-            employeeName: "สมชาย ใจดี"
+
+        try {
+            await apiFetch('/api/leave-requests', {
+                method: 'POST',
+                body: JSON.stringify({
+                    type: formData.type,
+                    startDate: formData.startDate,
+                    endDate: formData.endDate,
+                    reason: formData.reason,
+                    file: formData.file,
+                })
+            });
+
+            closeModal();
+            reloadData();
+
+        } catch (error) {
+            console.error("Error submitting request:", error);
+            alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         }
-
-        const updatedHistory = [...leaveHistory, newRequest]
-        saveToLocalStorage(updatedHistory)
-        closeModal()
     }
 
-    const handleStatusChange = (id: number, newStatus: string) => {
-        const updatedHistory = leaveHistory.map((item) =>
-            item.id === id ? { ...item, status: newStatus } : item
-        )
-        saveToLocalStorage(updatedHistory)
+    const handleStatusChange = async (id: number, newStatus: string) => {
+        try {
+            await apiFetch(`/api/leave-requests/${id}/status`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: newStatus })
+            });
+            reloadData();
+        } catch (error) {
+            console.error("Error updating status:", error);
+            alert("ไม่สามารถอัปเดตสถานะได้");
+        }
     }
 
-    // --- เปลี่ยนฟังก์ชันลบเป็นการเปิด Modal ---
     const handleDeleteClick = (id: number) => {
         setDeleteId(id)
         setShowDeleteModal(true)
     }
 
-    // --- ฟังก์ชันยืนยันการลบจริง ---
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deleteId !== null) {
-            const updatedHistory = leaveHistory.filter(item => item.id !== deleteId)
-            saveToLocalStorage(updatedHistory)
-            setShowDeleteModal(false)
-            setDeleteId(null)
+            try {
+                await apiFetch(`/api/leave-requests/${deleteId}`, {
+                    method: 'DELETE'
+                });
+                
+                setShowDeleteModal(false)
+                setDeleteId(null)
+                reloadData();
+            } catch (error) {
+                console.error("Error deleting request:", error);
+                alert("ไม่สามารถลบข้อมูลได้");
+            }
         }
     }
 
@@ -187,13 +211,15 @@ export default function Leave_Request() {
                                             {item.reason}
                                         </td>
                                         <td className="p-4 text-center">
-                                            <span className={`py-1 px-3 rounded-full text-sm font-medium ${item.status === "อนุมัติแล้ว" ? "bg-green-100 text-green-700" :
+                                            <span className={`py-1 px-3 rounded-full text-sm font-medium ${
+                                                item.status === "อนุมัติแล้ว" ? "bg-green-100 text-green-700" :
                                                 item.status === "ไม่อนุมัติ" ? "bg-red-100 text-red-700" :
-                                                    "bg-yellow-100 text-yellow-800"
-                                                }`}>
+                                                "bg-yellow-100 text-yellow-800"
+                                            }`}>
                                                 {item.status}
                                             </span>
                                         </td>
+
                                         <td className="p-4">
                                             <div className="flex justify-center items-center gap-2">
                                                 {item.status === "รอพิจารณา" ? (
@@ -205,6 +231,7 @@ export default function Leave_Request() {
                                                         >
                                                             <CircleCheck size={24} />
                                                         </button>
+                                                
                                                         <button
                                                             onClick={() => handleStatusChange(item.id, "ไม่อนุมัติ")}
                                                             className="text-red-500 hover:text-red-700 transition-transform hover:scale-110"
@@ -232,11 +259,9 @@ export default function Leave_Request() {
                 </div>
             </div>
 
-            {/* Modal ยื่นคำร้อง (Existing) */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className="bg-[#F2EEEE] w-150 rounded-2xl shadow-2xl p-6 relative animate-in fade-in zoom-in duration-200">
-                        {/* ... (เนื้อหาใน Modal เดิม) ... */}
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-[#134BA1]">ยื่นคำร้องขอลา</h2>
                             <button onClick={closeModal} className="text-gray-500 hover:text-red-500">
@@ -326,7 +351,6 @@ export default function Leave_Request() {
                 </div>
             )}
 
-            {/* --- Popup ยืนยันการลบ (ส่วนที่เพิ่มใหม่) --- */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
                     <div className="bg-white w-100 rounded-xl p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
