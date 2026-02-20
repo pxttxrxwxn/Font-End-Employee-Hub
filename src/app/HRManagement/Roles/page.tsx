@@ -53,7 +53,7 @@ export default function Roles() {
     const fetchRoles = async () => {
         try {
             setIsLoading(true);
-            const data = await apiFetch('/roles');
+            const data = await apiFetch('/api/roles');
             setRoles(data);
         } catch (error) {
             console.error("Failed to fetch roles:", error);
@@ -114,12 +114,12 @@ export default function Roles() {
             };
 
             if (editingId !== null) {
-                await apiFetch(`/roles/${editingId}`, {
+                await apiFetch(`/api/roles/${editingId}`, {
                     method: 'PUT',
                     body: JSON.stringify(payload)
                 });
             } else {
-                await apiFetch('/roles', {
+                await apiFetch('/api/roles', {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
@@ -141,7 +141,7 @@ export default function Roles() {
     const confirmDelete = async () => {
         if (deleteId !== null) {
             try {
-                await apiFetch(`/roles/${deleteId}`, {
+                await apiFetch(`/api/roles/${deleteId}`, {
                     method: 'DELETE'
                 });
                 
