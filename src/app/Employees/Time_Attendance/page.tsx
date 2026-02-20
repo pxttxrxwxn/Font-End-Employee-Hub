@@ -1,7 +1,9 @@
 "use client"
+
+import React, { useEffect, useState, useCallback } from "react"
 import Sidebar from "@/app/components/SidebarEmployees"
-import React, { useEffect, useState } from "react"
 import { Clock, CalendarDays, LogIn, LogOut, Bell } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 type HistoryItem = {
   employeeCode: string
@@ -16,26 +18,21 @@ type HistoryItem = {
 
 export default function Time_Attendance() {
   const [time, setTime] = useState(new Date())
-
   const [history, setHistory] = useState<HistoryItem[]>([])
-  const [isDataLoaded, setIsDataLoaded] = useState(false)
-  const CURRENT_EMPLOYEE_CODE = "EH002"
+  const [loading, setLoading] = useState(true)
 
-  const formatShortDate = (date: Date) =>
-    date.toLocaleDateString("th-TH", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    })
 
+  
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })
+    date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false })
 
   const formatFullTime = (date: Date) =>
     date.toLocaleTimeString("th-TH", { hour12: false })
 
   const formatDate = (date: Date) =>
     date.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+
+  const getISODate = (date: Date) => date.toISOString().split('T')[0];
 
   const calculateDuration = (startTimeStr: string, endTimeInput: Date | string) => {
     if (startTimeStr === "--:--") return "0:00"
@@ -63,32 +60,28 @@ export default function Time_Attendance() {
     return `${hours}:${minutes.toString().padStart(2, "0")}`
   }
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const storedData = localStorage.getItem("timeAttendanceHistory")
-        const parsedHistory = storedData ? JSON.parse(storedData) : []
-        setHistory(Array.isArray(parsedHistory) ? parsedHistory : [])
-      } catch (error) {
-        console.error("Local storage error", error)
-      } finally {
-        setIsDataLoaded(true)
-      }
+  const fetchHistory = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await apiFetch('/api/time-attendance/me')
+      setHistory(data)
+    } catch (error) {
+      console.error("Failed to fetch history:", error)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    if (typeof window !== "undefined" && isDataLoaded) {
-      localStorage.setItem("timeAttendanceHistory", JSON.stringify(history))
-    }
-  }, [history, isDataLoaded])
+    fetchHistory()
+  }, [fetchHistory])
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const todayStr = formatShortDate(new Date())
+  const todayStr = getISODate(new Date())
   const lastRecord = history[0]
   const isTodayRecord = lastRecord?.date === todayStr
 
@@ -102,69 +95,56 @@ export default function Time_Attendance() {
     : calculateDuration(checkIn, checkOut)
 
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     if (isCheckedIn) return
 
     const now = new Date()
     const timeNow = formatTime(now)
-    const dateNow = formatShortDate(now)
+    const dateNowISO = getISODate(now)
 
     const isLate = (d: Date) => d.getHours() > 8 || (d.getHours() === 8 && d.getMinutes() > 30)
 
-    const existingRecordIndex = history.findIndex((item) => item.date === dateNow)
-
-    if (existingRecordIndex !== -1) {
-      setHistory((prev) => {
-        const newHistory = [...prev]
-        newHistory[existingRecordIndex] = {
-          ...newHistory[existingRecordIndex],
-          employeeCode: CURRENT_EMPLOYEE_CODE,
-          checkOut: "--:--",
-          outType: "ไม่ใช้งาน",
-          status: "รอดำเนินการ",
-          activityStatus: "Active",
-        }
-        return newHistory
+    try {
+      await apiFetch('/api/time-attendance/check-in', {
+        method: 'POST',
+        body: JSON.stringify({
+            date: dateNowISO,
+            time: timeNow,
+            inType: isLate(now) ? "มาสาย" : "ปกติ"
+        })
       })
-    } else {
-      const newRecord: HistoryItem = {
-        employeeCode: CURRENT_EMPLOYEE_CODE,
-        date: dateNow,
-        checkIn: timeNow,
-        checkOut: "--:--",
-        inType: isLate(now) ? "มาสาย" : "ปกติ",
-        outType: "ไม่ใช้งาน",
-        status: "รอดำเนินการ",
-        activityStatus: "Active",
-      }
-      setHistory((prev) => [newRecord, ...prev])
+      fetchHistory()
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดในการลงเวลาเข้า")
+      console.error(error)
     }
   }
 
-  const handleCheckOut = () => {
+  const handleCheckOut = async () => {
     if (!isCheckedIn) {
       alert("กรุณาลงเวลาเข้างานก่อน")
       return
     }
 
     const now = new Date()
-
     const timeNow = formatTime(now)
+    const dateNowISO = getISODate(now)
     const isOvertime = now.getHours() >= 18
 
-    setHistory((prev) =>
-      prev.map((item, index) =>
-        index === 0 && item.date === formatShortDate(now)
-          ? {
-              ...item,
-              checkOut: timeNow,
-              outType: isOvertime ? "ล่วงเวลา" : "ปกติ",
-              status: "อนุมัติแล้ว",
-              activityStatus: "Inactive",
-            }
-          : item
-      )
-    )
+    try {
+      await apiFetch('/api/time-attendance/check-out', {
+        method: 'POST',
+        body: JSON.stringify({
+            date: dateNowISO,
+            time: timeNow,
+            outType: isOvertime ? "ล่วงเวลา" : "ปกติ"
+        })
+      })
+      fetchHistory()
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดในการลงเวลาออก")
+      console.error(error)
+    }
   }
 
   const typeBadge = (type: string) => {
@@ -185,31 +165,27 @@ export default function Time_Attendance() {
     }
   }
 
-  if (!isDataLoaded) {
-    return <div className="min-h-screen bg-white"></div>
+  if (loading && history.length === 0) {
+    return <div className="min-h-screen bg-white flex justify-center items-center">Loading...</div>
   }
-
+  
   return (
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />
 
-      <div className="flex-1 px-10 py-8 flex flex-col gap-10">
-
-        
-        <div className="flex justify-between items-center">
+      <div className="flex flex-col m-[3%] w-3/4">
+        <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#DF5E10]">
             ลงเวลาทำงานของฉัน
           </h1>
 
           <div className="flex items-center gap-3">
-
-            <button className="absolute top-0 right-0 p-2 rounded-full hover:bg-gray-100 mr-20 mt-14">
-                <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
+            <button className="p-2 rounded-full hover:bg-gray-100">
+              <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
             </button>
           </div>
         </div>
 
-        
         <div className="flex gap-12">
           <div className="flex-1 flex flex-col items-center">
             <Clock size={64} />
@@ -321,4 +297,3 @@ export default function Time_Attendance() {
     </div>
   )
 }
-

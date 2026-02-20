@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState, useEffect, ChangeEvent } from "react"
+import React, { useState, useEffect, ChangeEvent, useCallback } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Bell, Plus, X, Minus, Trello, Users, Trash2, Pen, Briefcase, AlertTriangle } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 interface Position {
     en: string;
@@ -16,19 +17,6 @@ interface Department {
     description: string;
     positions: Position[];
     memberCount: number;
-}
-
-interface EmployeeRecord {
-    employeeCode: string
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    department: string
-    position: string
-    startDate: string
-    role: string
-    address: string
 }
 
 export default function Departments() {
@@ -48,39 +36,21 @@ export default function Departments() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
-    useEffect(() => {
-        const loadData = () => {
-            try {
-                const savedDepts = localStorage.getItem("my_departments");
-                const savedEmployees = localStorage.getItem("employees_data");
-
-                if (savedDepts) {
-                    let deptList: Department[] = JSON.parse(savedDepts);
-
-                    if (savedEmployees) {
-                        const employees: EmployeeRecord[] = JSON.parse(savedEmployees);
-
-                        deptList = deptList.map(dept => {
-                            const count = employees.filter(emp =>
-                                emp.department === dept.deptEn || emp.department === dept.deptTh
-                            ).length;
-
-                            return { ...dept, memberCount: count };
-                        });
-                    }
-
-                    setDepartmentList(deptList);
-                }
-            } catch (error) {
-                console.error("Failed to load data:", error);
-            }
-        };
-
-        loadData();
-        
-        window.addEventListener('focus', loadData);
-        return () => window.removeEventListener('focus', loadData);
+    const loadData = useCallback(async () => {
+        try {
+            const data = await apiFetch('/api/departments');
+            setDepartmentList(data);
+        } catch (error) {
+            console.error("Failed to load data:", error);
+        }
     }, []);
+
+    useEffect(() => {
+        const initData = async () => {
+            await loadData();
+        };
+        initData();
+    }, [loadData]);
 
     const handleCloseModal = () => {
         setDeptEn("");
@@ -104,30 +74,34 @@ export default function Departments() {
         setShowModal(true);
     };
 
-    const handleSubmit = () => {
-        if (isEditing && editId !== null) {
-            const updatedList = departmentList.map((dept) => {
-                if (dept.id === editId) {
-                    return { ...dept, deptEn, deptTh, description, positions };
-                }
-                return dept;
-            });
-            setDepartmentList(updatedList);
-            localStorage.setItem("my_departments", JSON.stringify(updatedList));
-        } else {
-            const newDepartment: Department = {
-                id: Date.now(),
+    const handleSubmit = async () => {
+        try {
+            const payload = {
                 deptEn,
                 deptTh,
                 description,
-                positions,
-                memberCount: 0
+                positions
             };
-            const updatedList = [...departmentList, newDepartment];
-            setDepartmentList(updatedList);
-            localStorage.setItem("my_departments", JSON.stringify(updatedList));
+
+            if (isEditing && editId !== null) {
+                await apiFetch(`/api/departments/${editId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                await apiFetch('/api/departments', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            await loadData();
+            handleCloseModal();
+
+        } catch (error) {
+            console.error("Error saving department:", error);
+            alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         }
-        handleCloseModal();
     };
 
     const handleDeleteClick = (id: number) => {
@@ -135,14 +109,21 @@ export default function Departments() {
         setShowDeleteModal(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deleteId !== null) {
-            const updatedList = departmentList.filter(dept => dept.id !== deleteId);
-            setDepartmentList(updatedList);
-            localStorage.setItem("my_departments", JSON.stringify(updatedList));
-            
-            setShowDeleteModal(false);
-            setDeleteId(null);
+            try {
+                await apiFetch(`/api/departments/${deleteId}`, {
+                    method: 'DELETE'
+                });
+                
+                await loadData();
+                setShowDeleteModal(false);
+                setDeleteId(null);
+
+            } catch (error) {
+                console.error("Error deleting department:", error);
+                alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+            }
         }
     };
 
@@ -198,7 +179,7 @@ export default function Departments() {
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full">
                     {departmentList.map((dept) => (
-                        <div key={dept.id} className="bg-[#F8F9FA] rounded-xl p-6 relative shadow-sm border border-gray-100">
+                        <div key={dept.id} className="bg-[#F8F9FA] rounded-xl p-7 relative shadow-sm border border-gray-100">
 
                             <div className="absolute top-4 right-4 flex gap-2 z-10">
                                 <Pen
@@ -260,7 +241,7 @@ export default function Departments() {
                 </div>
 
                 {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-40">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                         <div className="bg-[#F2EEEE] w-[50%] rounded-xl p-8 shadow-lg relative max-h-[90vh] overflow-y-auto">
                             <button onClick={handleCloseModal} className="absolute top-6 right-6 text-gray-500 hover:text-black">
                                 <X size={24} />
@@ -314,7 +295,7 @@ export default function Departments() {
                 )}
 
                 {showDetailModal && selectedDept && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-40">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                         <div className="bg-[#F2EEEE] w-[50%] rounded-xl p-8 shadow-lg relative max-h-[90vh] overflow-y-auto">
 
                             <button
@@ -372,22 +353,22 @@ export default function Departments() {
                 {showDeleteModal && (
                     <div className="fixed inset-0 z-60 flex items-center justify-center bg-opacity-40 bg-black/50">
                         <div className="bg-white w-100 rounded-xl p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
-                            
+
                             <div className="flex flex-col items-center text-center">
                                 <div className="bg-red-100 p-3 rounded-full mb-4">
                                     <AlertTriangle size={40} className="text-[#D03E11]" />
                                 </div>
-                                
+
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                                     ยืนยันการลบแผนก?
                                 </h3>
                                 <p className="text-gray-500 mb-6">
-                                    คุณแน่ใจหรือไม่ที่จะลบแผนกนี้? <br/>
+                                    คุณแน่ใจหรือไม่ที่จะลบแผนกนี้? <br />
                                     การกระทำนี้ไม่สามารถย้อนกลับได้
                                 </p>
 
                                 <div className="flex gap-3 w-full">
-                                    <button 
+                                    <button
                                         onClick={cancelDelete}
                                         className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                                     >

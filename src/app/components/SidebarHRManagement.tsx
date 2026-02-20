@@ -3,7 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {User,Clock,Users,Trello,Shield,FileText,LogOut,} from "lucide-react";
+import { User, Clock, Users, Trello, Shield, FileText, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { apiFetch } from "../utils/api";
+
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  department: string;
+  position: string;
+  role: string;
+}
 
 const menus = [
   { icon: User, label: "โปรไฟล์พนักงาน", sub: "Profile", path: "/HRManagement/Profile" },
@@ -16,6 +26,21 @@ const menus = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const data = await apiFetch('/api/profile');
+        setUserProfile(data);
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <aside className="h-screen w-72 bg-[#07234D] text-white sticky top-0">
@@ -30,7 +55,9 @@ export default function Sidebar() {
         </div>
         <div className="flex flex-col px-4 py-5">
           <h1 className="text-lg font-semibold">Employee Hub</h1>
-          <p className="text-xs text-gray-400 font-[montserrat]">HR Management</p>
+          <p className="text-xs text-gray-400 font-[montserrat]">
+            {userProfile?.department || "Loading..."}
+          </p>
         </div>
       </div>
 
@@ -59,11 +86,15 @@ export default function Sidebar() {
       <div className="absolute bottom-0 w-72 px-4 py-4 border-t border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-            ส
+            {userProfile?.firstName ? userProfile.firstName.charAt(0) : "U"}
           </div>
           <div className="flex-1">
-            <p className="text-sm font-[Prompt]">สมชาย ใจดี</p>
-            <p className="text-xs text-gray-400 font-[montserrat]">HR Manager</p>
+            <p className="text-sm font-[Prompt]">
+                {userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : "Loading..."}
+            </p>
+            <p className="text-xs text-gray-400 font-[montserrat]">
+                {userProfile?.position || "Loading..."}
+            </p>
           </div>
           <Link href="/">
             <LogOut size={18} className="text-gray-400 cursor-pointer hover:text-white" />

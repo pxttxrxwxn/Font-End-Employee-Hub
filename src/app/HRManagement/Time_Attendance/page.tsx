@@ -2,9 +2,10 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Clock, CalendarDays, LogIn, LogOut, Bell, User } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 type HistoryItem = {
   employeeCode: string
@@ -19,24 +20,16 @@ type HistoryItem = {
 
 export default function Time_Attendance() {
   const [time, setTime] = useState(new Date())
-
   const [history, setHistory] = useState<HistoryItem[]>([])
-  const [isDataLoaded, setIsDataLoaded] = useState(false)
-  const CURRENT_EMPLOYEE_CODE = "EH001"
+  const [loading, setLoading] = useState(true)
 
   const pathname = usePathname()
-  const isMyAttendance = pathname === "/HRManagement/Time_Attendance"
-  const isHRManagement = pathname === "/HRManagement/Time_Attendance/Time_management_HR"
+  const isMyAttendance = pathname === "/HRManagement/Time_Attendance" || pathname === "/Employees/Time_Attendance"
+  const isHRManagement = pathname.includes("Time_management_HR")
 
-  const formatShortDate = (date: Date) =>
-    date.toLocaleDateString("th-TH", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    })
-
+  
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })
+    date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false })
 
   const formatFullTime = (date: Date) =>
     date.toLocaleTimeString("th-TH", { hour12: false })
@@ -44,58 +37,58 @@ export default function Time_Attendance() {
   const formatDate = (date: Date) =>
     date.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
 
+  const getISODate = (date: Date) => date.toISOString().split('T')[0];
+
   const calculateDuration = (startTimeStr: string, endTimeInput: Date | string) => {
     if (startTimeStr === "--:--") return "0:00"
 
     const [startH, startM] = startTimeStr.split(":").map(Number)
-    const startDate = new Date()
-    startDate.setHours(startH, startM, 0, 0)
+    const startTotalMinutes = (startH * 60) + startM
 
-    let endDate: Date
+    let endTotalMinutes = 0
+
     if (typeof endTimeInput === 'string') {
         if (endTimeInput === "--:--") return "0:00"
         const [endH, endM] = endTimeInput.split(":").map(Number)
-        endDate = new Date()
-        endDate.setHours(endH, endM, 0, 0)
+        endTotalMinutes = (endH * 60) + endM
     } else {
-        endDate = endTimeInput
+        endTotalMinutes = (endTimeInput.getHours() * 60) + endTimeInput.getMinutes()
     }
 
-    const diff = endDate.getTime() - startDate.getTime()
-    if (diff < 0) return "0:00"
+    let diffMinutes = endTotalMinutes - startTotalMinutes
 
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    if (diffMinutes < 0) {
+        diffMinutes += 24 * 60
+    }
+
+    const hours = Math.floor(diffMinutes / 60)
+    const minutes = diffMinutes % 60
 
     return `${hours}:${minutes.toString().padStart(2, "0")}`
   }
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const storedData = localStorage.getItem("timeAttendanceHistory")
-        const parsedHistory = storedData ? JSON.parse(storedData) : []
-        setHistory(Array.isArray(parsedHistory) ? parsedHistory : [])
-      } catch (error) {
-        console.error("Local storage error", error)
-      } finally {
-        setIsDataLoaded(true)
-      }
+  const fetchHistory = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await apiFetch('/api/time-attendance/me')
+      setHistory(data)
+    } catch (error) {
+      console.error("Failed to fetch history:", error)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    if (typeof window !== "undefined" && isDataLoaded) {
-      localStorage.setItem("timeAttendanceHistory", JSON.stringify(history))
-    }
-  }, [history, isDataLoaded])
+    fetchHistory()
+  }, [fetchHistory])
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const todayStr = formatShortDate(new Date())
+  const todayStr = getISODate(new Date())
   const lastRecord = history[0]
   const isTodayRecord = lastRecord?.date === todayStr
 
@@ -109,69 +102,56 @@ export default function Time_Attendance() {
     : calculateDuration(checkIn, checkOut)
 
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     if (isCheckedIn) return
 
     const now = new Date()
     const timeNow = formatTime(now)
-    const dateNow = formatShortDate(now)
+    const dateNowISO = getISODate(now)
 
     const isLate = (d: Date) => d.getHours() > 8 || (d.getHours() === 8 && d.getMinutes() > 30)
 
-    const existingRecordIndex = history.findIndex((item) => item.date === dateNow)
-
-    if (existingRecordIndex !== -1) {
-      setHistory((prev) => {
-        const newHistory = [...prev]
-        newHistory[existingRecordIndex] = {
-          ...newHistory[existingRecordIndex],
-          employeeCode: CURRENT_EMPLOYEE_CODE,
-          checkOut: "--:--",
-          outType: "ไม่ใช้งาน",
-          status: "รอดำเนินการ",
-          activityStatus: "Active",
-        }
-        return newHistory
+    try {
+      await apiFetch('/api/time-attendance/check-in', {
+        method: 'POST',
+        body: JSON.stringify({
+            date: dateNowISO,
+            time: timeNow,
+            inType: isLate(now) ? "มาสาย" : "ปกติ"
+        })
       })
-    } else {
-      const newRecord: HistoryItem = {
-        employeeCode: CURRENT_EMPLOYEE_CODE,
-        date: dateNow,
-        checkIn: timeNow,
-        checkOut: "--:--",
-        inType: isLate(now) ? "มาสาย" : "ปกติ",
-        outType: "ไม่ใช้งาน",
-        status: "รอดำเนินการ",
-        activityStatus: "Active",
-      }
-      setHistory((prev) => [newRecord, ...prev])
+      fetchHistory()
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดในการลงเวลาเข้า")
+      console.error(error)
     }
   }
 
-  const handleCheckOut = () => {
+  const handleCheckOut = async () => {
     if (!isCheckedIn) {
       alert("กรุณาลงเวลาเข้างานก่อน")
       return
     }
 
     const now = new Date()
-
     const timeNow = formatTime(now)
+    const dateNowISO = getISODate(now)
     const isOvertime = now.getHours() >= 18
 
-    setHistory((prev) =>
-      prev.map((item, index) =>
-        index === 0 && item.date === formatShortDate(now)
-          ? {
-              ...item,
-              checkOut: timeNow,
-              outType: isOvertime ? "ล่วงเวลา" : "ปกติ",
-              status: "อนุมัติแล้ว",
-              activityStatus: "Inactive",
-            }
-          : item
-      )
-    )
+    try {
+      await apiFetch('/api/time-attendance/check-out', {
+        method: 'POST',
+        body: JSON.stringify({
+            date: dateNowISO,
+            time: timeNow,
+            outType: isOvertime ? "ล่วงเวลา" : "ปกติ"
+        })
+      })
+      fetchHistory()
+    } catch (error) {
+      alert("เกิดข้อผิดพลาดในการลงเวลาออก")
+      console.error(error)
+    }
   }
 
   const typeBadge = (type: string) => {
@@ -192,10 +172,10 @@ export default function Time_Attendance() {
     }
   }
 
-  if (!isDataLoaded) {
-    return <div className="min-h-screen bg-white"></div>
+  if (loading && history.length === 0) {
+    return <div className="min-h-screen bg-white flex justify-center items-center">Loading...</div>
   }
-
+  
   return (
     <div className="flex bg-white font-[Prompt] min-h-screen text-black">
       <Sidebar />

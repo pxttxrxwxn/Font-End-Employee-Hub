@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useEffect, useState, InputHTMLAttributes, SelectHTMLAttributes } from "react"
+import React, { useEffect, useState, useCallback, InputHTMLAttributes, SelectHTMLAttributes } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Search, Plus, Mail, Phone, MoreHorizontal, X, Bell, AlertTriangle } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 interface PositionData {
   en: string;
@@ -33,11 +34,7 @@ type Employee = {
   startDate: string
   role: string
   address: string
-}
-
-type HistoryItem = {
-  employeeCode: string
-  activityStatus: string
+  activityStatus?: string
 }
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -49,9 +46,6 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options: string[]
 }
 
-const STORAGE_KEY = "employees_data"
-const HISTORY_KEY = "timeAttendanceHistory"
-
 export default function Employees() {
   const [showModal, setShowModal] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
@@ -59,16 +53,21 @@ export default function Employees() {
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentsData, setDepartmentsData] = useState<DepartmentData[]>([])
   const [rolesData, setRolesData] = useState<RoleData[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
 
-  const [attendanceStatusMap, setAttendanceStatusMap] = useState<Record<string, string>>({})
-
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : []
+  const fetchEmployees = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/employees');
+      setEmployees(data);
+    } catch (error) {
+      console.error("Failed to fetch employees:", error);
     }
-    return []
-  })
+  }, []);
+
+  useEffect(() => {
+    fetchEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredEmployees = employees.filter((emp) => {
     const search = searchTerm.toLowerCase();
@@ -106,31 +105,11 @@ export default function Employees() {
       if (roleStr) {
         setRolesData(JSON.parse(roleStr));
       }
-
-      const historyStr = localStorage.getItem(HISTORY_KEY);
-      if (historyStr) {
-        try {
-          const historyData: HistoryItem[] = JSON.parse(historyStr);
-          const statusMap: Record<string, string> = {};
-          
-          historyData.forEach((item) => {
-            if(item.employeeCode && !statusMap[item.employeeCode]) {
-                statusMap[item.employeeCode] = item.activityStatus;
-            }
-          });
-          setAttendanceStatusMap(statusMap);
-        } catch (error) {
-          console.error("Error parsing timeAttendanceHistory:", error);
-        }
-      }
     }, 0);
 
     return () => clearTimeout(loadData);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(employees))
-  }, [employees])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -166,58 +145,66 @@ export default function Employees() {
     )
   }
 
-  const handleAddEmployee = () => {
+  const handleAddEmployee = async () => {
     if (!isFormValid()) {
       alert("กรุณากรอกข้อมูลให้ครบทุกช่อง");
       return;
     }
 
-    const isDuplicate = employees.some(
-      (emp) => emp.employeeCode.trim() === form.employeeCode.trim()
-    );
+    try {
+      await apiFetch('/api/employees', {
+        method: 'POST',
+        body: JSON.stringify(form)
+      });
 
-    if (isDuplicate) {
-      alert("รหัสพนักงานนี้มีอยู่ในระบบแล้ว กรุณาตรวจสอบอีกครั้ง");
-      return;
+      await fetchEmployees();
+
+      setForm({
+        employeeCode: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        department: "",
+        position: "",
+        startDate: "",
+        role: "Employee",
+        address: "",
+      });
+      setShowModal(false);
+
+    } catch (error) {
+      console.error("Error adding employee:", error);
+      alert("เกิดข้อผิดพลาดในการเพิ่มพนักงาน หรือรหัสพนักงานซ้ำ");
     }
-
-    setEmployees((prev) => [...prev, form]);
-    setForm({
-      employeeCode: "",
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      department: "",
-      position: "",
-      startDate: "",
-      role: "Employee",
-      address: "",
-    });
-    setShowModal(false);
   };
 
-  const confirmDeleteEmployee = () => {
+  const confirmDeleteEmployee = async () => {
     if (!selectedEmployee) return
 
-    setEmployees((prev) =>
-      prev.filter(
-        (emp) => emp.employeeCode !== selectedEmployee.employeeCode
-      )
-    )
+    try {
+      await apiFetch(`/api/employees/${selectedEmployee.employeeCode}`, {
+        method: 'DELETE'
+      });
 
-    setShowDeleteModal(false)
-    setShowDetail(false)
-    setSelectedEmployee(null)
+      await fetchEmployees();
+
+      setShowDeleteModal(false)
+      setShowDetail(false)
+      setSelectedEmployee(null)
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      alert("ไม่สามารถลบข้อมูลพนักงานได้");
+    }
   }
-  const getStatusColorClass = (status: string) => {
-    const s = (status || '').toLowerCase();
-    
-    if (s === 'active') return 'bg-green-100 text-green-600';
-    return 'bg-[#C2C2C2] text-[#6D6D6D]';
-  }
-  const getStatusInfo = (employeeCode: string) => {
-    const status = attendanceStatusMap[employeeCode] || "Inactive";
+
+  const getStatusInfo = (emp: Employee) => {
+    const status = emp.activityStatus || "Inactive";
+    const getStatusColorClass = (s: string) => {
+        const lowerS = s.toLowerCase();
+        if (lowerS === 'active' || lowerS === 'online') return 'bg-green-100 text-green-600';
+        return 'bg-[#C2C2C2] text-[#6D6D6D]';
+    }
 
     return {
       text: status,
@@ -238,31 +225,29 @@ export default function Employees() {
             <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
           </button>
         </div>
+
         <div className="flex items-center justify-between mb-10">
-          <div className="relative w-80">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              placeholder="ค้นหาพนักงาน..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 outline-none"
-            />
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
-          >
-            <Plus size={20} />
-            เพิ่มพนักงาน
-          </button>
+            <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                    placeholder="ค้นหาพนักงาน..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 outline-none"
+                />
+            </div>
+            <button
+                onClick={() => setShowModal(true)}
+                className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
+            >
+                <Plus size={20} />
+                เพิ่มพนักงาน
+            </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredEmployees.map((emp) => {
-            const statusInfo = getStatusInfo(emp.employeeCode);
+            const statusInfo = getStatusInfo(emp);
 
             return (
               <div
@@ -332,11 +317,11 @@ export default function Employees() {
             </h2>
 
             <div className="grid grid-cols-3 gap-x-10 gap-y-6">
-              <Input label="รหัสพนักงาน" name="employeeCode" value={form.employeeCode} onChange={handleChange} />
-              <Input label="อีเมล" name="email" value={form.email} onChange={handleChange} />
-              <Input label="เบอร์โทรศัพท์" name="phone" value={form.phone} onChange={handleChange} />
-              <Input label="ชื่อ" name="firstName" value={form.firstName} onChange={handleChange} />
-              <Input label="นามสกุล" name="lastName" value={form.lastName} onChange={handleChange} />
+              <Input label="รหัสพนักงาน" name="employeeCode" placeholder="EH001" value={form.employeeCode} onChange={handleChange} />
+              <Input label="อีเมล" name="email" placeholder="kongsuk@company.co.th" value={form.email} onChange={handleChange} />
+              <Input label="เบอร์โทรศัพท์" name="phone" placeholder="081-111-2233" value={form.phone} onChange={handleChange} />
+              <Input label="ชื่อ" name="firstName" placeholder="ก้อง" value={form.firstName} onChange={handleChange} />
+              <Input label="นามสกุล" name="lastName" placeholder="สินสุข" value={form.lastName} onChange={handleChange} />
 
               <Select
                 label="แผนก"
@@ -391,6 +376,7 @@ export default function Employees() {
                   name="address"
                   value={form.address}
                   onChange={handleChange}
+                  placeholder="45/12 ซอยลาดพร้าว 71 แขวงสะพานสอง เขตวังทองหลาง กรุงเทพฯ 10310"
                   className="w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none"
                 />
               </div>
