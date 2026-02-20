@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import { apiFetch, API_URL } from "./utils/api";
 
 export default function Page() {
   const router = useRouter();
@@ -13,10 +14,8 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
 
-  const API_URL = "http://localhost:8787/api";
-
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = `${API_URL}/api/auth/google`;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -25,19 +24,10 @@ export default function Page() {
       setLoading(true);
   
       try {
-        const response = await fetch(`${API_URL}/auth/login`, {
+        const data = await apiFetch("/api/auth/login", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({ email, password }),
         });
-  
-        const data = await response.json();
-  
-        if (!response.ok) {
-          throw new Error(data.error || "Login failed");
-        }
   
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
