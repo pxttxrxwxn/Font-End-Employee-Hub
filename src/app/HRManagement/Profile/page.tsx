@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Mail, Phone, Building2, Calendar, Pencil, Bell } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 type Employee = {
     employeeCode: string
@@ -27,8 +28,6 @@ export default function Profile() {
     const [activityStatus, setActivityStatus] = useState<string>("Inactive")
     const [loading, setLoading] = useState(true)
 
-    const API_URL = "http://localhost:8787/api"
-
     useEffect(() => {
         const fetchProfile = async () => {
             const token = localStorage.getItem("token")
@@ -38,40 +37,23 @@ export default function Profile() {
             }
 
             try {
-                const res = await fetch(`${API_URL}/profile`, {
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                })
-
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        localStorage.removeItem("token")
-                        router.push("/")
-                    }
-                    throw new Error("Failed to fetch profile")
-                }
-
-                const data: Employee = await res.json()
+                const data: Employee = await apiFetch("/api/profile")
+                
                 setCurrentUser(data)
                 setFormData(data)
-                setActivityStatus("Active")
-
-                if (data.activityStatus) {
-                    setActivityStatus(data.activityStatus)
-                } else {
-                    setActivityStatus("Inactive")
-                }
+                setActivityStatus(data.activityStatus ? data.activityStatus : "Inactive")
 
             } catch (err) {
                 console.error("Error loading data:", err)
+                localStorage.removeItem("token")
+                router.push("/")
             } finally {
                 setLoading(false)
             }
         }
 
         fetchProfile()
-    }, [router, API_URL])
+    }, [router])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -82,29 +64,21 @@ export default function Profile() {
     }
 
     const handleSave = async () => {
-        const token = localStorage.getItem("token")
         try {
-            const res = await fetch(`${API_URL}/profile`, {
+            await apiFetch("/api/profile", {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     phone: formData.phone,
                     address: formData.address
                 })
             })
 
-            if (res.ok) {
-                setCurrentUser(formData as Employee)
-                setIsEdit(false)
-                alert("บันทึกข้อมูลเรียบร้อยแล้ว")
-            } else {
-                alert("บันทึกไม่สำเร็จ")
-            }
+            setCurrentUser(formData as Employee)
+            setIsEdit(false)
+            alert("บันทึกข้อมูลเรียบร้อยแล้ว")
         } catch (error) {
             console.error("Error saving data:", error)
+            alert("บันทึกไม่สำเร็จ")
         }
     }
 
@@ -116,9 +90,9 @@ export default function Profile() {
     }
 
     const getStatusColorClass = (status: string) => {
-        const s = (status || '').toLowerCase();
-        if (s === 'active') return 'bg-green-100 text-green-600';
-        return 'bg-[#C2C2C2] text-[#6D6D6D]';
+        const s = (status || '').toLowerCase()
+        if (s === 'active') return 'bg-green-100 text-green-600'
+        return 'bg-[#C2C2C2] text-[#6D6D6D]'
     }
 
     if (loading) return <div className="p-10">Loading Profile...</div>
@@ -143,34 +117,28 @@ export default function Profile() {
                         <div className="mt-6 w-36 h-36 rounded-full bg-[#C2C2C2] flex items-center justify-center overflow-hidden">
                             <p className="text-7xl text-white">{currentUser.firstName ? currentUser.firstName.charAt(0) : "U"}</p>
                         </div>
-
                         <p className="text-3xl font-semibold mt-4">
                             {currentUser.firstName} {currentUser.lastName}
                         </p>
                         <p className="text-lg mb-3 font-[Montserrat]">
                             {currentUser.position}
                         </p>
-
                         <span className={`px-4 py-1 text-sm rounded-full mb-6 font-medium ${getStatusColorClass(activityStatus)}`}>
                             {activityStatus}
                         </span>
-
                         <div className="space-y-4 text-gray-500 w-full max-w-xs">
                             <div className="flex items-center gap-3">
                                 <Mail size={20} />
                                 <span className="truncate">{currentUser.email}</span>
                             </div>
-
                             <div className="flex items-center gap-3">
                                 <Phone size={20} />
                                 <span>{currentUser.phone}</span>
                             </div>
-
                             <div className="flex items-center gap-3">
                                 <Building2 size={20} />
                                 <span>{currentUser.department}</span>
                             </div>
-
                             <div className="flex items-center gap-3">
                                 <Calendar size={20} />
                                 <span>เริ่มงาน {new Date(currentUser.startDate).toLocaleDateString('th-TH')}</span>
@@ -193,13 +161,10 @@ export default function Profile() {
                                 </button>
                             )}
                         </div>
-
                         <p className="mb-8">
                             รหัสพนักงาน <span className="ml-2 font-medium">{currentUser.employeeCode}</span>
                         </p>
-
                         <div className="grid grid-cols-2 gap-6">
-                            {/* ชื่อ - นามสกุล (Disabled) */}
                             <div>
                                 <label className="block mb-1">ชื่อ</label>
                                 <input
@@ -218,8 +183,6 @@ export default function Profile() {
                                     className="w-full border rounded-md px-4 py-2 bg-gray-100 text-gray-500 pointer-events-none"
                                 />
                             </div>
-
-                            {/* อีเมล (Disabled) */}
                             <div>
                                 <label className="block mb-1">อีเมล</label>
                                 <input
@@ -229,8 +192,6 @@ export default function Profile() {
                                     className="w-full border rounded-md px-4 py-2 bg-gray-100 text-gray-500 pointer-events-none"
                                 />
                             </div>
-
-                            {/* เบอร์โทร (Editable) */}
                             <div>
                                 <label className="block mb-1">เบอร์โทรศัพท์</label>
                                 <input
@@ -242,8 +203,6 @@ export default function Profile() {
                                     ${!isEdit ? "bg-gray-100 text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
-
-                            {/* ที่อยู่ (Editable) */}
                             <div className="col-span-2">
                                 <label className="block mb-1">ที่อยู่</label>
                                 <textarea
@@ -256,8 +215,6 @@ export default function Profile() {
                                     ${!isEdit ? "bg-gray-100 text-gray-500" : "border-gray-400 bg-white text-black"}`}
                                 />
                             </div>
-
-                            {/* แผนก & ตำแหน่ง (Disabled) */}
                             <div>
                                 <label className="block mb-1">แผนก</label>
                                 <input
