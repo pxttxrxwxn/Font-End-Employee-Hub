@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Sidebar from "@/app/components/SidebarHRManagement"
 import { Clock, Bell, Pencil, User } from "lucide-react"
+import { apiFetch } from "@/app/utils/api"
 
 type HRTimeItem = {
   name: string
@@ -16,17 +17,6 @@ type HRTimeItem = {
   status: string
 }
 
-const mockData: HRTimeItem[] = [
-  {
-    name: "สมชาย ใจดี",
-    date: "จ. 26 ม.ค",
-    checkIn: "08:20",
-    inType: "ปกติ",
-    checkOut: "17:00",
-    outType: "ปกติ",
-    status: "อนุมัติแล้ว",
-  },
-]
 
 const typeBadge = (type: string) => {
   switch (type) {
@@ -57,37 +47,43 @@ const statusBadge = (status: string) => {
 
 export default function TimeAttendanceHR() {
   const pathname = usePathname()
-
   const isMyAttendance = pathname === "/HRManagement/Time_Attendance"
   const isHRManagement = pathname === "/HRManagement/Time_Attendance/Time_management_HR"
 
   const [openEdit, setOpenEdit] = useState(false)
   const [selectedItem, setSelectedItem] = useState<HRTimeItem | null>(null)
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
-  const [data, setData] = useState<HRTimeItem[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("timeAttendanceHistory")
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored)
-          return parsed.map((item: Omit<HRTimeItem, 'name'>) => ({
-            name: "สมชาย ใจดี",
-            date: item.date,
-            checkIn: item.checkIn,
-            inType: item.inType,
-            checkOut: item.checkOut,
-            outType: item.outType,
-            status: item.status,
-          }))
-        } catch (e) {
-          console.error("Failed to parse storage", e)
-          return mockData
-        }
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  
+  const [data, setData] = useState<HRTimeItem[]>([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await apiFetch('/api/time-attendance/all')
+        setData(result)
+      } catch (error) {
+        console.error("Failed to load HR data", error)
       }
     }
-    return mockData
-  })
+    fetchData()
+  }, [])
+
+  const handleSaveEdit = async () => {
+    if (!selectedItem) return
+
+    try {
+      const updated = data.map((item, index) =>
+        index === selectedIndex ? selectedItem : item
+      )
+      
+      setData(updated)
+      setOpenEdit(false)
+      
+    } catch(e) {
+      console.error(e)
+    }
+  }
 
   return (
     <div className="flex min-h-screen bg-white font-[Prompt] text-black">
@@ -311,20 +307,9 @@ export default function TimeAttendanceHR() {
               >
                 ยกเลิก
               </button>
+              
               <button
-                onClick={() => {
-                  if (selectedIndex === null || !selectedItem) return
-
-                  const updated = [...data]
-                  updated[selectedIndex] = selectedItem
-
-                  setData(updated)
-                  localStorage.setItem(
-                    "timeAttendanceHistory",
-                    JSON.stringify(updated)
-                  )
-                  setOpenEdit(false)
-                }}
+                onClick={handleSaveEdit}
                 className="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold"
               >
                 บันทึกการเปลี่ยนแปลง
