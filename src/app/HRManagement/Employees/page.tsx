@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, InputHTMLAttributes, SelectHTMLAttributes } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Search, Plus, Mail, Phone, MoreHorizontal, X, Bell, AlertTriangle } from "lucide-react"
+import { Search, Plus, Mail, Phone, X, Bell, AlertTriangle, Pen, Trash2 } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 interface PositionData {
@@ -64,8 +64,28 @@ export default function Employees() {
     }
   }, []);
 
+  const fetchRoles = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/roles');
+      setRolesData(data);
+    } catch (error) {
+      console.error("Failed to fetch roles:", error);
+    }
+  }, []);
+
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/departments');
+      setDepartmentsData(data);
+    } catch (error) {
+      console.error("Failed to fetch departments:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchEmployees();
+    fetchRoles();
+    fetchDepartments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,23 +113,6 @@ export default function Employees() {
     role: "",
     address: "",
   })
-
-  useEffect(() => {
-    const loadData = setTimeout(() => {
-      const deptStr = localStorage.getItem("my_departments");
-      if (deptStr) {
-        setDepartmentsData(JSON.parse(deptStr));
-      }
-
-      const roleStr = localStorage.getItem("hr_roles");
-      if (roleStr) {
-        setRolesData(JSON.parse(roleStr));
-      }
-    }, 0);
-
-    return () => clearTimeout(loadData);
-  }, []);
-
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -176,6 +179,27 @@ export default function Employees() {
     } catch (error) {
       console.error("Error adding employee:", error);
       alert("เกิดข้อผิดพลาดในการเพิ่มพนักงาน หรือรหัสพนักงานซ้ำ");
+    }
+  };
+
+  const handleUpdateEmployee = async () => {
+    try {
+      if (!form.employeeCode) {
+        alert("ไม่พบรหัสพนักงาน");
+        return;
+      }
+      
+      await apiFetch(`/api/employees/${form.employeeCode}`, {
+        method: 'PUT',
+        body: JSON.stringify(form)
+      });
+
+      await fetchEmployees();
+      setShowDetail(false);
+      alert("อัปเดตข้อมูลพนักงานสำเร็จ");
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      alert("เกิดข้อผิดพลาดในการอัปเดตข้อมูล กรุณาตรวจสอบว่ามี API รองรับหรือไม่");
     }
   };
 
@@ -250,17 +274,38 @@ export default function Employees() {
             const statusInfo = getStatusInfo(emp);
 
             return (
-              <div
-                key={emp.employeeCode}
-                className="bg-gray-100 rounded-2xl p-6 relative"
-              >
-                <MoreHorizontal
-                  className="absolute top-4 right-4 text-gray-500 cursor-pointer"
-                  onClick={() => {
-                    setSelectedEmployee(emp)
-                    setShowDetail(true)
-                  }}
-                />
+              <div key={emp.employeeCode} className="bg-gray-100 rounded-2xl p-6 relative" >
+                <div className="absolute top-4 right-4 flex gap-2 z-10">
+                  <Pen
+                    size={18}
+                    className="text-[#6D6D6D] cursor-pointer hover:text-blue-500 transition-colors"
+                    onClick={() => {
+                      setSelectedEmployee(emp);
+                      setForm({
+                          employeeCode: emp.employeeCode,
+                          firstName: emp.firstName,
+                          lastName: emp.lastName,
+                          email: emp.email,
+                          phone: emp.phone,
+                          department: emp.department,
+                          position: emp.position,
+                          startDate: emp.startDate,
+                          role: emp.role,
+                          address: emp.address,
+                          activityStatus: emp.activityStatus || "Active"
+                      });
+                      setShowDetail(true);
+                    }}
+                  />
+                  <Trash2
+                    size={18}
+                    className="text-[#D03E11] cursor-pointer hover:text-red-500 transition-colors"
+                    onClick={() => {
+                      setSelectedEmployee(emp);
+                      setShowDeleteModal(true);
+                    }}
+                  />
+                </div>
 
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-14 h-14 rounded-full bg-gray-400 flex items-center justify-center text-xl font-bold text-white">
@@ -407,45 +452,119 @@ export default function Employees() {
 
       {showDetail && selectedEmployee && (
         <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-          <div className="bg-[#F5F0F0] w-225 rounded-3xl p-8 relative">
+          <div className="bg-[#F5F0F0] w-225 rounded-3xl p-10 relative">
             <button
               className="absolute top-6 right-6 text-gray-500 hover:text-black"
               onClick={() => setShowDetail(false)}
             >
-              <X />
+              <X size={24} />
             </button>
 
-            <h2 className="text-2xl font-bold text-blue-700 mb-6">
+            <h2 className="text-2xl font-bold text-[#134BA1] mb-8">
               รายละเอียดพนักงาน
             </h2>
 
-            <div className="grid grid-cols-3 gap-6 text-sm">
-              <Detail label="รหัสพนักงาน" value={selectedEmployee.employeeCode} />
-              <Detail label="อีเมล" value={selectedEmployee.email} />
-              <Detail label="เบอร์โทรศัพท์" value={selectedEmployee.phone} />
-              <Detail label="ชื่อ" value={selectedEmployee.firstName} />
-              <Detail label="นามสกุล" value={selectedEmployee.lastName} />
-              <Detail label="ตำแหน่ง" value={selectedEmployee.position} />
-              <Detail label="แผนก" value={selectedEmployee.department} />
-              <Detail label="วันที่เริ่มงาน" value={selectedEmployee.startDate} />
-              <Detail label="สิทธิ์การใช้งาน" value={selectedEmployee.role} />
+            <div className="flex items-center gap-6 mb-5 ml-10">
+              <div className="w-24 h-24 rounded-full bg-[#C2C2C2] flex items-center justify-center text-5xl font-bold text-white shadow-sm">
+                {form.firstName?.[0]}
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-2xl font-bold text-black">{form.firstName} {form.lastName}</h3>
+                  <span className={`${getStatusInfo(form).className} px-4 py-1 rounded-full text-sm font-medium`}>
+                    {getStatusInfo(form).text}
+                  </span>
+                </div>
+                <p className="text-[#6D6D6D] text-base">{form.position}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-5 text-sm">
+              <div className="col-start-1">
+                <Input label="รหัสพนักงาน" name="employeeCode" value={form.employeeCode} readOnly className="bg-white! border-none! shadow-sm! text-gray-500" />
+              </div>
+              <div className="col-start-2">
+                <Input label="อีเมล" name="email" value={form.email} onChange={handleChange} className="bg-white! border-none! shadow-sm!" />
+              </div>
+              <div className="col-start-3">
+                <Input label="เบอร์โทรศัพท์" name="phone" value={form.phone} onChange={handleChange} className="bg-white! border-none! shadow-sm!" />
+              </div>
+
+              <div className="col-start-1">
+                <Input label="ชื่อ" name="firstName" value={form.firstName} onChange={handleChange} className="bg-white! border-none! shadow-sm!" />
+              </div>
+              <div className="col-start-2">
+                <Input label="นามสกุล" name="lastName" value={form.lastName} onChange={handleChange} className="bg-white! border-none! shadow-sm!" />
+              </div>
+
+              <div className="col-start-3">
+                <Select label="แผนก" name="department" value={form.department} onChange={handleChange} options={departmentsData.map(d => d.deptEn)} className="bg-white! border-none! shadow-sm!" />
+              </div>
+              <div className="col-start-1">
+                <Select label="ตำแหน่ง" name="position" value={form.position} onChange={handleChange} options={getPositionOptions()} className="bg-white! border-none! shadow-sm!" />
+              </div>
+
+              <div className="col-start-2">
+                <Input label="วันที่เริ่มงาน" name="startDate" type="date" value={form.startDate} onChange={handleChange} className="bg-white! border-none! shadow-sm!" />
+              </div>
+              <div className="col-start-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm text-black font-medium">สิทธิ์การใช้งาน</label>
+                  <div className="flex flex-col gap-2 mt-2">
+                    {rolesData.length > 0 ? (
+                      rolesData.map((r) => (
+                        <label key={r.id} className="flex items-center gap-2 text-sm cursor-pointer text-gray-700">
+                          <input
+                            type="radio"
+                            name="role"
+                            value={r.nameEN}
+                            checked={form.role === r.nameEN}
+                            onChange={handleChange}
+                            className="cursor-pointer w-4 h-4 accent-[#009951]"
+                          />
+                          {r.nameEN}
+                        </label>
+                      ))
+                    ) : (
+                      <>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-700">
+                          <input type="radio" name="role" value="Employee" checked={form.role === "Employee"} onChange={handleChange} className="cursor-pointer w-4 h-4 accent-[#009951]" /> Employee
+                        </label>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-700">
+                          <input type="radio" name="role" value="HR" checked={form.role === "HR"} onChange={handleChange} className="cursor-pointer w-4 h-4 accent-[#009951]" /> HR
+                        </label>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               <div className="col-span-3">
-                <label className="text-gray-600">ที่อยู่</label>
-                <div className="bg-white rounded-lg p-3 mt-1 shadow-sm">
-                  {selectedEmployee.address}
-                </div>
+                <label className="text-sm text-black font-medium block mb-1">ที่อยู่</label>
+                <textarea
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  className="w-full rounded-lg bg-white px-4 py-3 outline-none shadow-sm border-none resize-none"
+                  rows={2}
+                />
               </div>
             </div>
 
-            <div className="flex justify-end mt-8">
+            <div className="flex justify-end gap-3 mt-8">
               <button
-                onClick={() => setShowDeleteModal(true)}
-                className="px-6 py-2 bg-[#C83B10] text-white rounded-xl cursor-pointer hover:bg-red-700 transition-colors"
+                onClick={() => setShowDetail(false)}
+                className="px-6 py-2.5 rounded-xl bg-[#C2C2C2] font-medium text-white hover:bg-gray-400 transition-colors cursor-pointer"
               >
-                ลบพนักงานออก
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleUpdateEmployee}
+                className="px-6 py-2.5 rounded-xl text-white font-medium bg-[#D87031] hover:bg-[#914617] transition-colors cursor-pointer"
+              >
+                บันทึกการแก้ไข
               </button>
             </div>
+            
           </div>
         </div>
       )}
@@ -467,13 +586,13 @@ export default function Employees() {
                     </p>
 
                     <div className="flex gap-3 w-full">
-                        <button 
+                        <button
                             onClick={() => setShowDeleteModal(false)}
                             className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                         >
                             ยกเลิก
                         </button>
-                        <button 
+                        <button
                             onClick={confirmDeleteEmployee}
                             className="flex-1 px-4 py-2 bg-[#C83B10] text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                         >
@@ -507,7 +626,7 @@ function Select({ label, options, ...props }: SelectProps) {
       <label className="text-sm text-black font-medium">{label}</label>
       <select
         {...props}
-        className="w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none focus:border-blue-500 transition-colors"
+        className={`w-full rounded-md border border-gray-400 bg-gray-50 px-4 py-2 outline-none focus:border-blue-500 transition-colors ${props.className || ""}`}
       >
         <option value="">เลือก</option>
         {options.map((op: string, index) => (
@@ -516,17 +635,6 @@ function Select({ label, options, ...props }: SelectProps) {
           </option>
         ))}
       </select>
-    </div>
-  )
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-gray-600">{label}</label>
-      <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
-        {value}
-      </div>
     </div>
   )
 }

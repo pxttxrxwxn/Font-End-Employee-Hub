@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarEmployees"
-import { Bell, Plus, X, Trash2, CircleCheck, CircleX, FileText, AlertTriangle } from "lucide-react"
+import { Bell, Plus, X, Trash2, FileText, AlertTriangle } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 interface LeaveRequest {
@@ -116,19 +116,6 @@ export default function Leave_Request() {
         }
     }
 
-    const handleStatusChange = async (id: number, newStatus: string) => {
-        try {
-            await apiFetch(`/api/leave-requests/${id}/status`, {
-                method: 'PUT',
-                body: JSON.stringify({ status: newStatus })
-            });
-            reloadData();
-        } catch (error) {
-            console.error("Error updating status:", error);
-            alert("ไม่สามารถอัปเดตสถานะได้");
-        }
-    }
-
     const handleDeleteClick = (id: number) => {
         setDeleteId(id)
         setShowDeleteModal(true)
@@ -222,33 +209,13 @@ export default function Leave_Request() {
 
                                         <td className="p-4">
                                             <div className="flex justify-center items-center gap-2">
-                                                {item.status === "รอพิจารณา" ? (
-                                                    <>
-                                                        <button
-                                                            onClick={() => handleStatusChange(item.id, "อนุมัติแล้ว")}
-                                                            className="text-green-500 hover:text-green-700 transition-transform hover:scale-110"
-                                                            title="อนุมัติ"
-                                                        >
-                                                            <CircleCheck size={24} />
-                                                        </button>
-                                                
-                                                        <button
-                                                            onClick={() => handleStatusChange(item.id, "ไม่อนุมัติ")}
-                                                            className="text-red-500 hover:text-red-700 transition-transform hover:scale-110"
-                                                            title="ไม่อนุมัติ"
-                                                        >
-                                                            <CircleX size={24} />
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleDeleteClick(item.id)}
-                                                        className="text-gray-500 hover:text-red-600 transition-transform hover:scale-110"
-                                                        title="ลบรายการ"
-                                                    >
-                                                        <Trash2 size={24} />
-                                                    </button>
-                                                )}
+                                                <button
+                                                    onClick={() => handleDeleteClick(item.id)}
+                                                    className="text-gray-500 hover:text-red-600 transition-transform hover:scale-110"
+                                                    title="ลบรายการ"
+                                                >
+                                                    <Trash2 size={24} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
