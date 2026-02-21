@@ -8,6 +8,7 @@ import { Clock, Bell, Pencil, User } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 type HRTimeItem = {
+  employeeId: string
   name: string
   date: string
   checkIn: string
@@ -15,8 +16,8 @@ type HRTimeItem = {
   checkOut: string
   outType: string
   status: string
+  reason?: string
 }
-
 
 const typeBadge = (type: string) => {
   switch (type) {
@@ -72,16 +73,28 @@ export default function TimeAttendanceHR() {
   const handleSaveEdit = async () => {
     if (!selectedItem) return
 
+    if (!selectedItem.reason || selectedItem.reason.trim() === '') {
+      alert('กรุณาระบุเหตุผลในการแก้ไขข้อมูล')
+      return
+    }
+
     try {
+      await apiFetch('/api/time-attendance/edit', {
+        method: 'PUT',
+        body: JSON.stringify(selectedItem)
+      })
+
       const updated = data.map((item, index) =>
         index === selectedIndex ? selectedItem : item
       )
       
       setData(updated)
       setOpenEdit(false)
+      alert("บันทึกการแก้ไขเรียบร้อยแล้ว!")
       
     } catch(e) {
       console.error(e)
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง")
     }
   }
 
@@ -167,7 +180,7 @@ export default function TimeAttendanceHR() {
                   <td className="p-4 text-center">
                     <button
                       onClick={() => {
-                        setSelectedItem({ ...item })
+                        setSelectedItem({ ...item, reason: '' })
                         setSelectedIndex(index)
                         setOpenEdit(true)
                       }}
@@ -203,7 +216,7 @@ export default function TimeAttendanceHR() {
                 <input
                   value={selectedItem.name}
                   disabled
-                  className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                  className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300"
                 />
               </div>
 
@@ -212,10 +225,8 @@ export default function TimeAttendanceHR() {
                   <label className="font-medium">วันที่</label>
                   <input
                     value={selectedItem.date}
-                    onChange={(e) =>
-                      setSelectedItem({ ...selectedItem, date: e.target.value })
-                    }
-                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                    disabled
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300"
                   />
                 </div>
 
@@ -226,10 +237,10 @@ export default function TimeAttendanceHR() {
                     onChange={(e) =>
                       setSelectedItem({ ...selectedItem, status: e.target.value })
                     }
-                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500"
                   >
                     <option>อนุมัติแล้ว</option>
-                    <option>รอตรวจสอบ</option>
+                    <option>รอดำเนินการ</option>
                     <option>ไม่อนุมัติ</option>
                   </select>
                 </div>
@@ -240,10 +251,8 @@ export default function TimeAttendanceHR() {
                   <label className="font-medium">เวลาเข้างาน</label>
                   <input
                     value={selectedItem.checkIn}
-                    onChange={(e) =>
-                      setSelectedItem({ ...selectedItem, checkIn: e.target.value })
-                    }
-                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                    disabled
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300"
                   />
                 </div>
 
@@ -254,7 +263,7 @@ export default function TimeAttendanceHR() {
                     onChange={(e) =>
                       setSelectedItem({ ...selectedItem, inType: e.target.value })
                     }
-                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500"
                   >
                     <option>ปกติ</option>
                     <option>มาสาย</option>
@@ -268,10 +277,8 @@ export default function TimeAttendanceHR() {
                   <input
                     type='time'
                     value={selectedItem.checkOut}
-                    onChange={(e) =>
-                      setSelectedItem({ ...selectedItem, checkOut: e.target.value })
-                    }
-                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                    disabled
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300"
                   />
                 </div>
 
@@ -282,7 +289,7 @@ export default function TimeAttendanceHR() {
                     onChange={(e) =>
                       setSelectedItem({ ...selectedItem, outType: e.target.value })
                     }
-                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white"
+                    className="w-full mt-1 px-4 py-2 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500"
                   >
                     <option>ปกติ</option>
                     <option>ล่วงเวลา</option>
@@ -291,9 +298,11 @@ export default function TimeAttendanceHR() {
               </div>
 
               <div>
-                <label className="font-medium">เหตุผลในการแก้ไข *</label>
+                <label className="font-medium">เหตุผลในการแก้ไข <span className="text-red-500">*</span></label>
                 <textarea
-                  className="w-full mt-1 px-4 py-2 rounded-lg bg-white resize-none"
+                  value={selectedItem.reason || ''}
+                  onChange={(e) => setSelectedItem({ ...selectedItem, reason: e.target.value })}
+                  className="w-full mt-1 px-4 py-2 rounded-lg bg-white resize-none border border-gray-300 focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="กรุณาระบุเหตุผลในการแก้ไขเวลา"
                 />
@@ -303,14 +312,14 @@ export default function TimeAttendanceHR() {
             <div className="flex justify-end gap-4 mt-8">
               <button
                 onClick={() => setOpenEdit(false)}
-                className="px-6 py-2 rounded-lg bg-gray-300 text-gray-700"
+                className="px-6 py-2 rounded-lg bg-gray-300 text-gray-700 hover:bg-gray-400"
               >
                 ยกเลิก
               </button>
               
               <button
                 onClick={handleSaveEdit}
-                className="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold"
+                className="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600"
               >
                 บันทึกการเปลี่ยนแปลง
               </button>
