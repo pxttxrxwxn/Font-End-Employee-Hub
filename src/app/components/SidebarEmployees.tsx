@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname , useRouter } from "next/navigation";
 import { User, Clock, FileText, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../utils/api";
@@ -23,6 +23,7 @@ const menus = [
 
 export default function SidebarEmployees() {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -37,7 +38,11 @@ export default function SidebarEmployees() {
 
     fetchProfile();
   }, []);
-
+  
+  const handleLogout = async () => {
+    localStorage.removeItem('token');
+    router.replace('/');
+  };
   return (
     <aside className="h-screen w-72 bg-[#07234D] text-white sticky top-0">
       <div className="flex items-center mb-2 mt-2">
@@ -92,9 +97,9 @@ export default function SidebarEmployees() {
               {user?.position || "Loading..."}
             </p>
           </div>
-          <Link href="/">
+          <button onClick={handleLogout} className="flex items-center">
             <LogOut size={18} className="text-gray-400 cursor-pointer hover:text-white" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>
