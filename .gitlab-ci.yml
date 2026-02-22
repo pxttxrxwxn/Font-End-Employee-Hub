@@ -5,6 +5,7 @@ variables:
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
 stages:
   - build
+  - test
   - sonarqube_scan
   - deploy
 
@@ -20,6 +21,32 @@ build_app_image:
     - docker build -t $TAG_COMMIT .
     - docker push $TAG_LATEST
     - docker push $TAG_COMMIT
+
+# ---------- TEST ----------
+robot_tests:
+  stage: test
+  image: python:3.11-slim
+  services:
+    - name: $TAG_LATEST
+      alias: app-service
+  variables:
+    APP_HOST: http://app-service:80
+    DEBIAN_FRONTEND: noninteractive
+  before_script:
+    - apt-get update && apt-get install -y chromium-driver
+    - apt-get install -y curl
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install robotframework robotframework-seleniumlibrary
+    - echo "Waiting for the service container ($APP_HOST) to start..."
+    - timeout 60s bash -c 'while [[ "$(curl -s -o /dev/null -w "%{http_code}" $APP_HOST)" != "200" ]]; do sleep 2; done'
+    - echo "Service container is up! Proceeding with tests."
+  script:
+    - robot --exitonfailure --variable BASE_URL:$APP_HOST --outputdir ./tests/results tests/ci/test.robot
+  artifacts:
+    when: always
+    paths:
+      - ./tests/results
 
 # ---------- Code Quality Scan ----------
 sonarcloud-check:
