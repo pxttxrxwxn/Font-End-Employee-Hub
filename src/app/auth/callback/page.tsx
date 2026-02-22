@@ -13,44 +13,46 @@ function AuthCallbackContent() {
         const error = searchParams.get("error");
 
         if (error) {
-        let errorMsg = "Login Failed";
-        if (error === 'unauthorized_email') errorMsg = "This email is not registered in our system.";
-        
-        alert(errorMsg);
-        router.push("/");
-        return;
+            let errorMsg = "Login Failed";
+            if (error === 'unauthorized_email') errorMsg = "This email is not registered in our system.";
+            
+            alert(errorMsg);
+            router.push("/");
+            return;
         }
 
         if (token && userStr) {
-        try {
-            const user = JSON.parse(decodeURIComponent(userStr));
-            
-            localStorage.setItem("token", token);
-            localStorage.setItem("user", JSON.stringify(user));
+            try {
+                const user = JSON.parse(decodeURIComponent(userStr));
+                
+                localStorage.setItem("token", token);
+                localStorage.setItem("user", JSON.stringify(user));
 
-            if (user.role_id === 1) {
-            router.push("/HRManagement/Profile");
-            } else {
-            router.push("/Employees/Profile");
+                if (user.role?.name_en === "HR Management") {
+                    router.push("/HRManagement/Profile");
+                } else if (user.role?.name_en === "Employee") {
+                    router.push("/Employees/Profile");
+                } else {
+                    router.push("/Employees/Profile");
+                }
+            } catch (e) {
+                console.error("Error parsing user data", e);
+                router.push("/");
             }
-        } catch (e) {
-            console.error("Error parsing user data", e);
-            router.push("/");
-        }
         }
     }, [router, searchParams]);
 
     return (
         <div className="h-screen flex items-center justify-center bg-white flex-col gap-4">
-        <div className="w-12 h-12 border-4 border-[#0D274E] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-xl text-[#0D274E] font-bold">Verifying your account...</p>
+            <div className="w-12 h-12 border-4 border-[#0D274E] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xl text-[#0D274E] font-bold">Verifying your account...</p>
         </div>
     );
 }
 
 export default function AuthCallbackPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}>
             <AuthCallbackContent />
         </Suspense>
     );

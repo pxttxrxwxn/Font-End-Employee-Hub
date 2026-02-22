@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname , useRouter} from "next/navigation";
 import { User, Clock, Users, Trello, Shield, FileText, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiFetch } from "../utils/api";
@@ -23,12 +23,16 @@ const menus = [
   { icon: Trello, label: "แผนกและตำแหน่ง", sub: "Departments", path: "/HRManagement/Departments" },
   { icon: FileText, label: "คำร้องขอลา", sub: "Leave Requests", path: "/HRManagement/Leave_Request" },
 ];
-
 export default function Sidebar() {
   const pathname = usePathname();
-  
+  const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
+  
+  const handleLogout = async () => {
+    localStorage.removeItem('token');
+    router.replace('/');
+  };
+  
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -96,9 +100,9 @@ export default function Sidebar() {
                 {userProfile?.position || "Loading..."}
             </p>
           </div>
-          <Link href="/">
+          <button onClick={handleLogout} className="flex items-center">
             <LogOut size={18} className="text-gray-400 cursor-pointer hover:text-white" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>
