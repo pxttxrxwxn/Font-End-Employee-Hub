@@ -37,6 +37,7 @@ sonarcloud-check:
     - merge_requests
     - master
     - develop
+    - main
 
 # ---------- DEPLOY Vercel ----------
 deploy-vercel:
