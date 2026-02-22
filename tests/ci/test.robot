@@ -2,8 +2,8 @@
 Library    SeleniumLibrary
 
 *** Variables ***
-# ตัวแปรนี้จะถูกแทนที่ด้วย --variable BASE_URL:$APP_HOST ตอนรันใน CI
-${BASE_URL}    http://localhost
+
+${BASE_URL}    http://localhost:80
 
 *** Test Cases ***
 Verify Employee Hub Login Page Loads Successfully
