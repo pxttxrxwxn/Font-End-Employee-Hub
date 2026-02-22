@@ -39,7 +39,7 @@ sonarcloud-check:
     - develop
 
 # ---------- DEPLOY Vercel ----------
-# deploy-vercel:
+deploy-vercel:
   stage: deploy
   image: node:20
   variables:
