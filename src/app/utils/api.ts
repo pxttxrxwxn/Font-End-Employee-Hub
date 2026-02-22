@@ -1,5 +1,4 @@
 export const API_URL = 'https://back-end-employee-hub.naysasatadur5555.workers.dev';
-// export const API_URL = 'http://localhost:8787';
 
 const getToken = () => {
     if (typeof window !== 'undefined') {
