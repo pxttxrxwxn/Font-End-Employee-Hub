@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Bell, Plus, X, Users, Trash2, Pen, Shield, Key, AlertTriangle } from "lucide-react"
+import { Plus, X, Users, Trash2, Pen, Shield, Key, AlertTriangle } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 interface Role {
@@ -169,9 +169,6 @@ export default function Roles() {
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                         จัดการสิทธิ์ผู้ใช้งาน
                     </h1>
-                    <button className="p-2 rounded-full hover:bg-gray-100">
-                        <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-                    </button>
                 </div>
 
                 <div className="flex w-full items-center justify-end mb-6">
@@ -181,7 +178,7 @@ export default function Roles() {
                             setFormData({ nameEN: "", nameTH: "", description: "", permissions: [] });
                             setIsModalOpen(true);
                         }}
-                        className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
+                        className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
                     >
                         <Plus />
                         เพิ่มบทบาท
@@ -192,7 +189,7 @@ export default function Roles() {
                 ) : (
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full">
                         {roles.map((role) => (
-                            <div key={role.id} className="bg-[#F8F9FA] rounded-xl p-6 relative shadow-sm border border-[#000000] flex flex-col h-full">
+                            <div key={role.id} className="bg-[#E6E6E6] rounded-xl p-6 relative shadow-sm flex flex-col h-full">
                                 <div className="absolute top-4 right-4 flex gap-2 z-10">
                                     <Pen
                                         size={18}
@@ -226,8 +223,8 @@ export default function Roles() {
                                 </div>
 
                                 <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
-                                    <span className="text-gray-400 text-xs flex items-center gap-1">
-                                        <Key size={12} /> สิทธิ์การเข้าถึง
+                                    <span className="text-black text-xs flex items-center gap-1">
+                                        <Key size={14} className="text-[#6D6D6D]" /> สิทธิ์การเข้าถึง
                                     </span>
                                     <div className="w-full flex flex-wrap gap-2 mt-1">
                                         {role.permissions.slice(0, 10).map((permId) => (

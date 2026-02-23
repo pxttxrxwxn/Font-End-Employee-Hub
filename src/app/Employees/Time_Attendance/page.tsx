@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react"
 import Sidebar from "@/app/components/SidebarEmployees"
-import { Clock, CalendarDays, LogIn, LogOut, Bell } from "lucide-react"
+import { Clock, CalendarDays, LogIn, LogOut } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 type HistoryItem = {
@@ -178,12 +178,6 @@ export default function Time_Attendance() {
           <h1 className="text-3xl font-bold text-[#DF5E10]">
             ลงเวลาทำงานของฉัน
           </h1>
-
-          <div className="flex items-center gap-3">
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-            </button>
-          </div>
         </div>
 
         <div className="flex gap-12">

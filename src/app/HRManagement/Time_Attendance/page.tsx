@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import React, { useEffect, useState, useCallback } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Clock, CalendarDays, LogIn, LogOut, Bell, User } from "lucide-react"
+import { Clock, CalendarDays, LogIn, LogOut, User } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 type HistoryItem = {
@@ -202,9 +202,6 @@ export default function Time_Attendance() {
                 <User size={18} /> จัดการเวลา (HR)
               </button>
             </Link>
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-            </button>
           </div>
         </div>
 
@@ -230,8 +227,8 @@ export default function Time_Attendance() {
               <button
                 onClick={handleCheckOut}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl text-lg font-medium transition-colors
-                  ${!isCheckedIn 
-                    ? "opacity-50 cursor-pointer bg-orange-100 text-orange-600" 
+                  ${!isCheckedIn
+                    ? "opacity-50 cursor-pointer bg-orange-100 text-orange-600"
                     : "bg-orange-100 text-orange-600 hover:bg-orange-200"}`}
               >
                 <LogOut /> ลงเวลาออกงาน
@@ -282,7 +279,7 @@ export default function Time_Attendance() {
           <h2 className="flex items-center gap-2 text-xl font-semibold mb-4">
             <CalendarDays /> ประวัติการลงเวลา
           </h2>
-          <div className="bg-white rounded-xl shadow-sm border">
+          <div className="bg-white rounded-xl border">
             <table className="w-full text-left">
               <thead className="border-b text-gray-500">
                 <tr>

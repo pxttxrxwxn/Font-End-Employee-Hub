@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Clock, Bell, Pencil, User } from "lucide-react"
+import { Clock, Pencil, User } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 type HRTimeItem = {
@@ -133,10 +133,6 @@ export default function TimeAttendanceHR() {
                 จัดการเวลา (HR)
               </button>
             </Link>
-
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <Bell size={30} className="text-[#6D6D6D]" />
-            </button>
           </div>
         </div>
 

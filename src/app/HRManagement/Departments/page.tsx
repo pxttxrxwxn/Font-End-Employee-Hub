@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, ChangeEvent, useCallback } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Bell, Plus, X, Minus, Trello, Users, Trash2, Pen, Briefcase, AlertTriangle } from "lucide-react"
+import { Plus, X, Minus, Trello, Users, Trash2, Pen, Briefcase, AlertTriangle } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 interface Position {
@@ -162,15 +162,12 @@ export default function Departments() {
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                         จัดการแผนกและตำแหน่ง
                     </h1>
-                    <button className="p-2 rounded-full hover:bg-gray-100">
-                        <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-                    </button>
                 </div>
 
                 <div className="flex w-full items-center justify-end mb-6">
                     <div
                         onClick={() => setShowModal(true)}
-                        className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
+                        className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
                     >
                         <Plus />
                         แผนกและตำแหน่ง
@@ -179,7 +176,7 @@ export default function Departments() {
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full">
                     {departmentList.map((dept) => (
-                        <div key={dept.id} className="bg-[#F8F9FA] rounded-xl p-7 relative shadow-sm border border-gray-100">
+                        <div key={dept.id} className="bg-[#E6E6E6] rounded-xl p-7 relative shadow-sm border border-gray-100">
 
                             <div className="absolute top-4 right-4 flex gap-2 z-10">
                                 <Pen
