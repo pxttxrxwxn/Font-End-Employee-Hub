@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Sidebar from "@/app/components/SidebarEmployees"
-import { Mail, Phone, Building2, Calendar, Pencil, Bell } from "lucide-react"
+import { Mail, Phone, Building2, Calendar, Pencil } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 type Employee = {
@@ -107,9 +107,6 @@ export default function Profile() {
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                         จัดการแผนกและตำแหน่ง
                     </h1>
-                    <button className="p-2 rounded-full hover:bg-gray-100">
-                        <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-                    </button>
                 </div>
 
                 <div className="flex w-full gap-10">
