@@ -65,7 +65,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className="px-3 space-y-2">
+      <nav className="px-3 space-y-4">
         {menus.map((m, i) => {
           const Icon = m.icon;
           const isActive = pathname === m.path;
@@ -79,8 +79,8 @@ export default function Sidebar() {
             >
               <Icon size={24} className="text-white" />
               <div className="leading-tight">
-                <p className="text-xl font-[Prompt]">{m.label}</p>
-                <p className="text-xs text-gray-400 font-[montserrat]">{m.sub}</p>
+                <p className="text-[19px] font-[Prompt]">{m.label}</p>
+                <p className="text-[14px] text-gray-400 font-[montserrat]">{m.sub}</p>
               </div>
             </Link>
           );
@@ -89,7 +89,7 @@ export default function Sidebar() {
 
       <div className="absolute bottom-0 w-72 px-4 py-4 border-t border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center">
             {userProfile?.firstName ? userProfile.firstName.charAt(0) : "U"}
           </div>
           <div className="flex-1">
