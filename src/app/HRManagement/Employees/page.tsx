@@ -121,10 +121,24 @@ export default function Employees() {
   ) => {
     const { name, value } = e.target
 
-    if (name === "department") {
-        setForm((prev) => ({ ...prev, [name]: value, position: "" }))
+    if (name === "phone") {
+      const onlyNums = value.replace(/[^\d]/g, '');
+
+      let formattedValue = '';
+      if (onlyNums.length <= 3) {
+        formattedValue = onlyNums;
+      } else if (onlyNums.length <= 6) {
+        formattedValue = `${onlyNums.slice(0, 3)}-${onlyNums.slice(3)}`;
+      } else {
+        formattedValue = `${onlyNums.slice(0, 3)}-${onlyNums.slice(3, 6)}-${onlyNums.slice(6, 10)}`;
+      }
+
+      setForm((prev) => ({ ...prev, [name]: formattedValue }));
+      
+    } else if (name === "department") {
+      setForm((prev) => ({ ...prev, [name]: value, position: "" }))
     } else {
-        setForm((prev) => ({ ...prev, [name]: value }))
+      setForm((prev) => ({ ...prev, [name]: value }))
     }
   }
 
@@ -262,7 +276,7 @@ export default function Employees() {
             </div>
             <button
                 onClick={() => setShowModal(true)}
-                className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
+                className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
             >
                 <Plus size={20} />
                 เพิ่มพนักงาน
@@ -274,7 +288,7 @@ export default function Employees() {
             const statusInfo = getStatusInfo(emp);
 
             return (
-              <div key={emp.employeeCode} className="bg-gray-100 rounded-2xl p-6 relative" >
+              <div key={emp.employeeCode} className="bg-[#F0F0F0] rounded-2xl p-6 relative" >
                 <div className="absolute top-4 right-4 flex gap-2 z-10">
                   <Pen
                     size={18}
@@ -364,7 +378,7 @@ export default function Employees() {
             <div className="grid grid-cols-3 gap-x-10 gap-y-6">
               <Input label="รหัสพนักงาน" name="employeeCode" placeholder="EH001" value={form.employeeCode} onChange={handleChange} />
               <Input label="อีเมล" name="email" placeholder="kongsuk@company.co.th" value={form.email} onChange={handleChange} />
-              <Input label="เบอร์โทรศัพท์" name="phone" placeholder="081-111-2233" value={form.phone} onChange={handleChange} />
+              <Input label="เบอร์โทรศัพท์" name="phone" placeholder="081-111-2233" maxLength={12} value={form.phone} onChange={handleChange} />
               <Input label="ชื่อ" name="firstName" placeholder="ก้อง" value={form.firstName} onChange={handleChange} />
               <Input label="นามสกุล" name="lastName" placeholder="สินสุข" value={form.lastName} onChange={handleChange} />
 
