@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarEmployees"
-import { Bell, Plus, X, Trash2, FileText, AlertTriangle } from "lucide-react"
+import { Plus, X, Trash2, FileText, AlertTriangle } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 interface LeaveRequest {
@@ -146,15 +146,12 @@ export default function Leave_Request() {
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
                         คำร้องขอลา
                     </h1>
-                    <button className="p-2 rounded-full hover:bg-gray-100">
-                        <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-                    </button>
                 </div>
 
                 <div className="flex w-full items-center justify-end mb-6">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex bg-[#134BA1] text-white p-4 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
+                        className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
                     >
                         <Plus />
                         ยื่นคำร้องขอลา
