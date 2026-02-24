@@ -97,6 +97,8 @@ export default function Employees() {
       emp.employeeCode.toLowerCase().includes(search) ||
       fullName.includes(search)
     );
+  }).sort((a, b) => {
+    return a.employeeCode.localeCompare(b.employeeCode, undefined, { numeric: true });
   });
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
@@ -288,7 +290,7 @@ export default function Employees() {
             const statusInfo = getStatusInfo(emp);
 
             return (
-              <div key={emp.employeeCode} className="bg-[#F0F0F0] rounded-2xl p-6 relative" >
+              <div key={emp.employeeCode} className="bg-[#F0F0F0] rounded-2xl p-6 pb-3 relative" >
                 <div className="absolute top-4 right-4 flex gap-2 z-10">
                   <Pen
                     size={18}
@@ -337,6 +339,10 @@ export default function Employees() {
                 </div>
 
                 <div className="space-y-3 text-gray-700 text-sm">
+                  
+                  <div className="flex items-center gap-3">
+                    รหัสพนังงาน: {emp.employeeCode}
+                  </div>
                   <div className="flex items-center gap-3">
                     <Mail size={16} />
                     {emp.email}
@@ -347,7 +353,7 @@ export default function Employees() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-6">
+                <div className="flex items-center justify-between mt-3">
                   <span className="text-gray-500 text-sm">
                     {emp.department}
                   </span>
