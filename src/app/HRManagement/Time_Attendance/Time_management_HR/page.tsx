@@ -174,11 +174,19 @@ export default function TimeAttendanceHR() {
                       {item.status}
                     </span>
                   </td>
-                  <td className="p-4">{item.reason}</td>
+                  <td className="p-4">
+                      {item.reason ? (
+                          <span className="text-sm text-gray-600 truncate max-w-37.5 block" title={item.reason}>
+                              {item.reason}
+                          </span>
+                      ) : (
+                          <span className="text-gray-400">-</span>
+                      )}
+                  </td>
                   <td className="p-4 text-center">
                     <button
                       onClick={() => {
-                        setSelectedItem({ ...item, reason: '' })
+                        setSelectedItem({ ...item })
                         setSelectedIndex(index)
                         setOpenEdit(true)
                       }}
