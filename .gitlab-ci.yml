@@ -76,9 +76,9 @@ deploy-vercel:
     VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID_X
   script:
     - npm install --global vercel
-    - vercel pull --yes --environment=preview --token="$TOKEN"
-    - vercel build --token="$TOKEN"
-    - vercel deploy --prebuilt --token="$TOKEN"
+    - vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+    - vercel build --token="$VERCEL_TOKEN"
+    - vercel deploy --prebuilt --token="$VERCEL_TOKEN"
 
 # ---------- DEPLOY AWS ----------
 #deploy-aws:
