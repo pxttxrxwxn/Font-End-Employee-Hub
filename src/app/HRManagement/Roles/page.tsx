@@ -218,11 +218,11 @@ export default function Roles() {
                                     </div>
                                 </div>
 
-                                <p className="text-gray-500 text-sm mb-4 min-h-10 line-clamp-2">
+                                <p className="text-gray-500 text-sm mb-1 min-h-10 line-clamp-2">
                                     {role.description || "-"}
                                 </p>
 
-                                <div className="flex items-center gap-2 text-blue-600 mb-4 text-sm font-medium">
+                                <div className="flex items-center gap-2 text-blue-600 mb-1 text-sm font-medium">
                                     <Users size={18} />
                                     <span className="text-black">{role.userCount} <span className="text-[#6D6D6D]">ผู้ใช้งาน</span></span>
                                 </div>
