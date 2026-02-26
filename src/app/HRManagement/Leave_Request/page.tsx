@@ -36,7 +36,8 @@ export default function Leave_Request() {
         const fetchData = async () => {
             try {
                 const data = await apiFetch('/api/leave-requests');
-                setLeaveHistory(data);
+                const sortedData = data.sort((a: LeaveRequest, b: LeaveRequest) => b.id - a.id);
+                setLeaveHistory(sortedData);
             } catch (error) {
                 console.error("Failed to fetch leave requests:", error);
             }
@@ -150,7 +151,22 @@ export default function Leave_Request() {
             }
         }
     }
-
+    const formatTextByWords = (text: string) => {
+    if (!text) return null;
+    const words = text.split(' ');
+    const chunks = [];
+    
+    for (let i = 0; i < words.length; i += 10) {
+        chunks.push(words.slice(i, i + 10).join(' '));
+    }
+    
+    return chunks.map((chunk, index) => (
+        <span key={index}>
+        {chunk}
+        {index < chunks.length - 1 && <br />}
+        </span>
+    ));
+    };
     return (
         <div className="flex bg-white font-[Prompt] min-h-screen text-black">
             <Sidebar />
@@ -179,35 +195,35 @@ export default function Leave_Request() {
                     <table className="w-full text-left">
                         <thead className="border-b">
                             <tr>
-                                <th className="p-4 font-semibold text-black">ชื่อ - นามสกุล</th>
+                                <th className="py-4 pl-4 font-semibold text-black">ชื่อ - นามสกุล</th>
                                 <th className="p-4 font-semibold text-black">ประเภท</th>
                                 <th className="p-4 font-semibold text-black">วันที่ลา</th>
-                                <th className="p-4 font-semibold text-black text-center">จำนวนวัน</th>
+                                <th className="py-4 font-semibold text-black text-center">จำนวนวัน</th>
                                 <th className="p-4 font-semibold text-black">เหตุผล</th>
-                                <th className="p-4 font-semibold text-black text-center">สถานะ</th>
-                                <th className="p-4 font-semibold text-black text-center">จัดการ</th>
+                                <th className="py-4 font-semibold text-black text-center">สถานะ</th>
+                                <th className="py-4 font-semibold text-black text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody>
                             {leaveHistory.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="p-8 text-center text-gray-400">ยังไม่มีรายการคำร้องขอลา</td>
+                                    <td colSpan={7} className="py-8 text-center text-gray-400">ยังไม่มีรายการคำร้องขอลา</td>
                                 </tr>
                             ) : (
                                 leaveHistory.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 border-b">
-                                        <td className="p-4">{item.employeeName}</td>
+                                        <td className="py-4 pl-4">{item.employeeName}</td>
                                         <td className="p-4">{item.type}</td>
                                         <td className="p-4 text-sm text-black">
                                             {item.startDate}
                                         </td>
-                                        <td className="p-4 text-center">
+                                        <td className="py-4 text-center">
                                             {calculateDays(item.startDate, item.endDate)}
                                         </td>
-                                        <td className="p-4 truncate max-w-40" title={item.reason}>
-                                            {item.reason}
+                                        <td className="p-4 max-w-40 align-top whitespace-normal wrap-break-word" title={item.reason}>
+                                            {formatTextByWords(item.reason)}
                                         </td>
-                                        <td className="p-4 text-center">
+                                        <td className="py-4 text-center">
                                             <span className={`py-1 px-3 rounded-full text-sm font-medium ${
                                                 item.status === "อนุมัติแล้ว" ? "bg-green-100 text-green-700" :
                                                 item.status === "ไม่อนุมัติ" ? "bg-red-100 text-red-700" :
