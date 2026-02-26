@@ -105,7 +105,7 @@ export default function Profile() {
             <div className="flex flex-col m-[3%] w-3/4 ">
                 <div className="flex w-full items-start justify-between">
                     <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
-                        จัดการแผนกและตำแหน่ง
+                        โปรไฟล์พนักงาน
                     </h1>
                 </div>
 

@@ -220,8 +220,8 @@ export default function Departments() {
                             </div>
 
                             <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
-                                <span className="text-gray-400 text-xs flex items-center gap-1">
-                                    <Briefcase size={20} className="text-[#757575]" /> ตำแหน่งในแผนก
+                                <span className="text-black text-xs flex items-center gap-1">
+                                    <Briefcase size={20} className="text-black" /> ตำแหน่งในแผนก
                                 </span>
                                 <div className="w-full flex flex-wrap gap-2 mt-1">
                                     {dept.positions.map((pos, idx) => (

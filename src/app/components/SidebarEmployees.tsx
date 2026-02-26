@@ -55,7 +55,7 @@ export default function SidebarEmployees() {
           />
         </div>
         <div className="flex flex-col px-4 py-5">
-          <h1 className="text-lg font-semibold">Employee Hub</h1>
+          <h1 className="text-[20px] font-semibold">Employee Hub</h1>
           <p className="text-xs text-gray-400 font-[montserrat]">
             {user?.department || "Loading..."}
           </p>
