@@ -268,9 +268,9 @@ export default function Departments() {
                             </div>
                             {positions.map((item, index) => (
                                 <div key={index} className="grid grid-cols-2 gap-6 mb-3 items-center">
-                                    <input type="text" value={item.en} onChange={(e) => handleInputChange(e, index, 'en')} className="w-full p-2 rounded-md border-none focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
+                                    <input type="text" value={item.en} onChange={(e) => handleInputChange(e, index, 'en')} placeholder="Software Development Manager" className="w-full p-2 rounded-md border-none focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
                                     <div className="flex items-center gap-2">
-                                        <input type="text" value={item.th} onChange={(e) => handleInputChange(e, index, 'th')} className="w-full p-2 rounded-md border-none focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
+                                        <input type="text" value={item.th} onChange={(e) => handleInputChange(e, index, 'th')} placeholder="ผู้จัดการแผนกพัฒนาระบบ" className="w-full p-2 rounded-md border-none focus:ring-2 focus:ring-blue-500 outline-none bg-white" />
                                         {(positions.length > 1 || (positions.length === 1 && (item.en !== "" || item.th !== ""))) && (
                                             <button onClick={() => removeRow(index)} className="bg-[#D03E11] text-white p-1 rounded hover:bg-red-700 transition-colors shrink-0">
                                                 <Minus size={16} strokeWidth={4} />
