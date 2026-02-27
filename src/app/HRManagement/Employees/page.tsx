@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, InputHTMLAttributes, SelectHTMLAttributes } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Search, Plus, Mail, Phone, X, Bell, AlertTriangle, Pen, Trash2 } from "lucide-react"
+import { Search, Plus, Mail, Phone, X, AlertTriangle, Pen, Trash2 } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
 
 interface PositionData {
@@ -261,9 +261,6 @@ export default function Employees() {
           <h1 className="text-3xl font-bold text-[#DF5E10] mb-10">
             จัดการพนักงาน
           </h1>
-          <button className="p-2 rounded-full hover:bg-gray-100">
-            <Bell size={30} className="text-[#6D6D6D] cursor-pointer" />
-          </button>
         </div>
 
         <div className="flex items-center justify-between mb-10">
