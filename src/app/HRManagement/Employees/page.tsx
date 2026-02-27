@@ -274,7 +274,21 @@ export default function Employees() {
                 />
             </div>
             <button
-                onClick={() => setShowModal(true)}
+                onClick={() => {
+                  setForm({
+                    employeeCode: "",
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                    phone: "",
+                    department: "",
+                    position: "",
+                    startDate: "",
+                    role: "",
+                    address: "",
+                  });
+                  setShowModal(true);
+                }}
                 className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
             >
                 <Plus size={20} />
