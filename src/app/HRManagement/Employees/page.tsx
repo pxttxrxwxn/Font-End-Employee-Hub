@@ -54,6 +54,7 @@ export default function Employees() {
   const [departmentsData, setDepartmentsData] = useState<DepartmentData[]>([])
   const [rolesData, setRolesData] = useState<RoleData[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -83,6 +84,15 @@ export default function Employees() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setCurrentUserId(payload.sub);
+      } catch (error) {
+        console.error("Failed to decode token", error);
+      }
+    }
     fetchEmployees();
     fetchRoles();
     fetchDepartments();
@@ -234,7 +244,11 @@ export default function Employees() {
       setSelectedEmployee(null)
     } catch (error) {
       console.error("Error deleting employee:", error);
-      alert("ไม่สามารถลบข้อมูลพนักงานได้");
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("ไม่สามารถลบข้อมูลพนักงานได้");
+      }
     }
   }
 
@@ -326,8 +340,17 @@ export default function Employees() {
                   />
                   <Trash2
                     size={18}
-                    className="text-[#D03E11] cursor-pointer hover:text-red-500 transition-colors"
+                    className={`transition-colors ${
+                      emp.employeeCode === currentUserId
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-[#D03E11] cursor-pointer hover:text-red-500"
+                    }`}
                     onClick={() => {
+                      if (emp.employeeCode === currentUserId) {
+                        alert("ไม่อนุญาตให้ลบข้อมูลบัญชีของตัวเองได้ ต้องให้ HR ท่านอื่นดำเนินการให้เท่านั้น");
+                        return;
+                      }
+                      
                       setSelectedEmployee(emp);
                       setShowDeleteModal(true);
                     }}
