@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react"
 import Sidebar from "@/app/components/SidebarHRManagement"
-import { Plus, X, Trash2, CircleCheck, CircleX, FileText, AlertTriangle } from "lucide-react"
+import { Plus, X, Trash2, CircleCheck, CircleX, FileText, AlertTriangle, Calendar } from "lucide-react"
 import { apiFetch } from "@/app/utils/api"
+import Image from "next/image"
 
 interface LeaveRequest {
     id: number;
@@ -22,6 +23,8 @@ export default function Leave_Request() {
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteId, setDeleteId] = useState<number | null>(null)
     const [refreshKey, setRefreshKey] = useState(0)
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+    const [selectedLeave, setSelectedLeave] = useState<LeaveRequest | null>(null)
 
     const initialFormState = {
         type: "",
@@ -32,6 +35,7 @@ export default function Leave_Request() {
     }
 
     const [formData, setFormData] = useState(initialFormState)
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -63,8 +67,13 @@ export default function Leave_Request() {
     }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFormData({ ...formData, file: e.target.files[0].name })
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setFormData({ ...formData, file: reader.result as string })
+            }
+            reader.readAsDataURL(file)
         }
     }
 
@@ -80,6 +89,11 @@ export default function Leave_Request() {
     const closeModal = () => {
         setIsModalOpen(false)
         setFormData(initialFormState)
+    }
+
+    const closeDetailsModal = () => {
+        setIsDetailsModalOpen(false)
+        setSelectedLeave(null)
     }
 
     const handleSubmit = async () => {
@@ -117,7 +131,8 @@ export default function Leave_Request() {
         }
     }
 
-    const handleStatusChange = async (id: number, newStatus: string) => {
+    const handleStatusChange = async (e: React.MouseEvent, id: number, newStatus: string) => {
+        e.stopPropagation();
         try {
             await apiFetch(`/api/leave-requests/${id}/status`, {
                 method: 'PUT',
@@ -130,7 +145,8 @@ export default function Leave_Request() {
         }
     }
 
-    const handleDeleteClick = (id: number) => {
+    const handleDeleteClick = (e: React.MouseEvent, id: number) => {
+        e.stopPropagation();
         setDeleteId(id)
         setShowDeleteModal(true)
     }
@@ -152,23 +168,62 @@ export default function Leave_Request() {
         }
     }
     const formatTextByWords = (text: string) => {
-    if (!text) return null;
-    const words = text.split(' ');
-    const chunks = [];
-    
-    for (let i = 0; i < words.length; i += 10) {
-        chunks.push(words.slice(i, i + 10).join(' '));
-    }
-    
-    return chunks.map((chunk, index) => (
-        <span key={index}>
-        {chunk}
-        {index < chunks.length - 1 && <br />}
-        </span>
-    ));
+        if (!text) return null;
+        const words = text.split(' ');
+        const chunks = [];
+        
+        for (let i = 0; i < words.length; i += 10) {
+            chunks.push(words.slice(i, i + 10).join(' '));
+        }
+        
+        return chunks.map((chunk, index) => (
+            <span key={index}>
+            {chunk}
+            {index < chunks.length - 1 && <br />}
+            </span>
+        ));
     };
+    const handleRowClick = (item: LeaveRequest) => {
+        setSelectedLeave(item)
+        setIsDetailsModalOpen(true)
+    }
+    const renderAttachmentPreview = (fileData: string | null) => {
+        if (!fileData || fileData === '-') return <p className="text-gray-500 italic mt-2">ไม่มีเอกสารแนบ</p>;
+        
+        if (fileData.startsWith('data:image/')) {
+            return (
+                <div className="relative mt-4 w-full h-96 bg-gray-50 border rounded-lg p-2">
+                    <Image
+                        src={fileData}
+                        alt="Attachment"
+                        fill
+                        className="object-contain rounded shadow-sm"
+                    />
+                </div>
+            );
+        }
+        else if (fileData.startsWith('data:application/pdf')) {
+            return (
+                <iframe src={fileData} className="w-full h-96 mt-4 border rounded-lg shadow-sm" title="PDF Attachment"></iframe>
+            );
+        }
+        else {
+            const displayData = fileData.length > 30
+                ? `${fileData.substring(0, 30)}...`
+                : fileData;
+
+            return (
+                <div className="mt-4 p-4 border rounded-lg bg-gray-50 flex flex-col items-center overflow-hidden">
+                    <FileText size={48} className="text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600 mb-2 break-all">ชื่อไฟล์: {displayData}</p>
+                    <p className="text-xs text-red-500">ข้อมูลไฟล์ไม่สมบูรณ์</p>
+                </div>
+            );
+        }
+    }
+
     return (
-        <div className="flex bg-white font-[Prompt] min-h-screen text-black">
+        <div className="flex bg-[#F8F9FA] font-[Prompt] min-h-screen text-black">
             <Sidebar />
             <div className="flex flex-col m-[3%] w-3/4">
                 <div className="flex w-full items-start justify-between">
@@ -180,20 +235,20 @@ export default function Leave_Request() {
                 <div className="flex w-full items-center justify-end mb-6">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors"
+                        className="flex bg-[#134BA1] text-white px-4 py-2 rounded-xl text-xl items-center gap-1 cursor-pointer hover:bg-[#0f3a80] transition-colors shadow-sm"
                     >
                         <Plus />
                         ยื่นคำร้องขอลา
                     </button>
                 </div>
 
-                <div className="flex w-full items-end justify-start mb-6 text-2xl font-bold gap-2 text-back">
+                <div className="flex w-full items-end justify-start mb-6 text-2xl font-bold gap-2 text-black">
                     <FileText size={30} />รายการยื่นคำร้องขอลา
                 </div>
 
-                <div className="w-full bg-white overflow-hidden border rounded-xl">
+                <div className="w-full bg-white overflow-hidden border rounded-xl shadow-sm">
                     <table className="w-full text-left">
-                        <thead className="border-b">
+                        <thead className="bg-gray-50 border-b">
                             <tr>
                                 <th className="py-4 pl-4 font-semibold text-black">ชื่อ - นามสกุล</th>
                                 <th className="p-4 font-semibold text-black">ประเภท</th>
@@ -211,7 +266,11 @@ export default function Leave_Request() {
                                 </tr>
                             ) : (
                                 leaveHistory.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50 border-b">
+                                    <tr
+                                        key={item.id}
+                                        className="hover:bg-gray-100 border-b cursor-pointer transition-colors"
+                                        onClick={() => handleRowClick(item)}
+                                    >
                                         <td className="py-4 pl-4">{item.employeeName}</td>
                                         <td className="p-4">{item.type}</td>
                                         <td className="p-4 text-sm text-black">
@@ -238,15 +297,15 @@ export default function Leave_Request() {
                                                 {item.status === "รอพิจารณา" ? (
                                                     <>
                                                         <button
-                                                            onClick={() => handleStatusChange(item.id, "อนุมัติแล้ว")}
+                                                            onClick={(e) => handleStatusChange(e, item.id, "อนุมัติแล้ว")}
                                                             className="text-green-500 hover:text-green-700 transition-transform hover:scale-110"
                                                             title="อนุมัติ"
                                                         >
                                                             <CircleCheck size={24} />
                                                         </button>
-                                                
+                                                        
                                                         <button
-                                                            onClick={() => handleStatusChange(item.id, "ไม่อนุมัติ")}
+                                                            onClick={(e) => handleStatusChange(e, item.id, "ไม่อนุมัติ")}
                                                             className="text-red-500 hover:text-red-700 transition-transform hover:scale-110"
                                                             title="ไม่อนุมัติ"
                                                         >
@@ -255,7 +314,7 @@ export default function Leave_Request() {
                                                     </>
                                                 ) : (
                                                     <button
-                                                        onClick={() => handleDeleteClick(item.id)}
+                                                        onClick={(e) => handleDeleteClick(e, item.id)}
                                                         className="text-gray-500 hover:text-red-600 transition-transform hover:scale-110"
                                                         title="ลบรายการ"
                                                     >
@@ -271,7 +330,6 @@ export default function Leave_Request() {
                     </table>
                 </div>
             </div>
-
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className="bg-[#F2EEEE] w-150 rounded-2xl shadow-2xl p-6 relative animate-in fade-in zoom-in duration-200">
@@ -347,18 +405,67 @@ export default function Leave_Request() {
                         <div className="flex justify-end gap-3 mt-8">
                             <button
                                 onClick={closeModal}
-                                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold"
+                                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold transition-colors"
                             >
                                 ยกเลิก
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                className={`px-6 py-2 text-white rounded-lg font-semibold shadow-md ${formData.type ? "bg-[#D87031] hover:bg-[#c44e0b]" : "bg-gray-400 cursor-not-allowed"
+                                className={`px-6 py-2 text-white rounded-lg font-semibold shadow-md transition-colors ${formData.type ? "bg-[#DF5E10] hover:bg-[#c44e0b]" : "bg-gray-400 cursor-not-allowed"
                                     }`}
                                 disabled={!formData.type}
                             >
                                 ยื่นคำร้อง
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isDetailsModalOpen && selectedLeave && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-[#F2EEEE] w-200 max-w-[90vw] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-8 relative animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-[#134BA1]">รายละเอียดคำร้องขอลา</h2>
+                            <button onClick={closeDetailsModal} className="text-gray-500 hover:text-red-500">
+                                <X size={28} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-black">ประเภทการลา</label>
+                                <div className="w-1/3 min-w-50 p-3 bg-white border border-gray-300 rounded-lg shadow-sm">
+                                    {selectedLeave.type}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 text-black">วันที่เริ่มลา</label>
+                                    <div className="w-full p-3 bg-white border border-gray-300 rounded-lg flex justify-between items-center shadow-sm text-gray-600">
+                                        {selectedLeave.startDate}
+                                        <Calendar size={18} className="text-gray-400" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 text-black">วันที่สิ้นสุด</label>
+                                    <div className="w-full p-3 bg-white border border-gray-300 rounded-lg flex justify-between items-center shadow-sm text-gray-600">
+                                        {selectedLeave.endDate}
+                                        <Calendar size={18} className="text-gray-400" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-black">เหตุผลในการลา</label>
+                                <div className="w-full p-4 bg-white border border-gray-300 rounded-lg min-h-25 shadow-sm">
+                                    {selectedLeave.reason || "-"}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-black">เอกสารแนบ</label>
+                                {renderAttachmentPreview(selectedLeave.file)}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -371,15 +478,11 @@ export default function Leave_Request() {
                             <div className="bg-red-100 p-3 rounded-full mb-4">
                                 <AlertTriangle size={40} className="text-[#D03E11]" />
                             </div>
-
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                ยืนยันการลบคำร้อง?
-                            </h3>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">ยืนยันการลบคำร้อง?</h3>
                             <p className="text-gray-500 mb-6">
                                 คุณต้องการลบคำร้องขอลาจการนี้ใช่หรือไม่? <br />
                                 การกระทำนี้ไม่สามารถย้อนกลับได้
                             </p>
-
                             <div className="flex gap-3 w-full">
                                 <button
                                     onClick={() => setShowDeleteModal(false)}

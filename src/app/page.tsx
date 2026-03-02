@@ -76,8 +76,8 @@ function LoginContent() {
           <Image src="/images/LOGO Employee Hub-Photoroom 1.png" alt="Logo" width={704.29} height={606} />
         </div>
 
-        <div className="bg-[#0D274E] h-screen w-[60%] flex flex-col items-right rounded-l-[100px]">
-          <div className="flex flex-col items-center justify-center h-screen mr-[3%] ml-[3%] gap-[3em]"> 
+        <div className="bg-[#0D274E] h-screen w-[60%] flex flex-col items-right rounded-l-[50px]">
+          <div className="flex flex-col items-center justify-center h-screen mr-[3%] ml-[3%] gap-[3em]">
             <h1 className="text-white text-6xl font-bold mb-4">Sign in to continue</h1>
             
             <form id="login-form" onSubmit={handleLogin} className="min-w-3/4 mt-6 flex flex-col gap-6">

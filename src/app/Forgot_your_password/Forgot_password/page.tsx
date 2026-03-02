@@ -39,7 +39,7 @@ export default function Forgot_password() {
             <div className="flex flex-col items-left justify-center h-screen ml-[3%] mr-[3%]">
                 <Image src="/images/LOGO Employee Hub-Photoroom 1.png" alt="Logo" width={704.29} height={606} />
             </div>
-            <div className="bg-[#0D274E] h-screen w-[60%] flex flex-col items-right rounded-l-[100px]">
+            <div className="bg-[#0D274E] h-screen w-[60%] flex flex-col items-right rounded-l-[50px]">
                 <div className="flex flex-col items-center justify-center h-screen mr-[3%] ml-[3%] gap-[3em]">
                     <h1 className="text-white text-6xl font-bold mb-4">Reset your Password</h1>
                     
