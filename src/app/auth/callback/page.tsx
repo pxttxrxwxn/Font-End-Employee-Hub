@@ -27,7 +27,7 @@ function AuthCallbackContent() {
                 
                 localStorage.setItem("token", token);
                 localStorage.setItem("user", JSON.stringify(user));
-
+                document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; Secure; SameSite=Strict`;
                 if (user.role?.name_en === "HR Management") {
                     router.push("/HRManagement/Profile");
                 } else if (user.role?.name_en === "Employee") {

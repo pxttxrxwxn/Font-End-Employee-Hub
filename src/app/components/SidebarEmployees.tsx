@@ -41,6 +41,9 @@ export default function SidebarEmployees() {
   
   const handleLogout = async () => {
     localStorage.removeItem('token');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    document.cookie = "token=; path=/; max-age=0; Secure; SameSite=Strict";
     router.replace('/');
   };
   return (
