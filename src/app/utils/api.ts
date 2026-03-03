@@ -2,7 +2,8 @@ export const API_URL = 'https://back-end-employee-hub.naysasatadur5555.workers.d
 
 const getToken = () => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('token');
+        const match = document.cookie.match(new RegExp('(^| )token=([^;]+)'));
+        if (match) return match[2];
     }
     return '';
 };

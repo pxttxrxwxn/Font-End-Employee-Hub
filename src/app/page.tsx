@@ -32,7 +32,7 @@ function LoginContent() {
   
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-  
+        document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; Secure; SameSite=Strict`;
         if (data.user.role.name_en === "HR Management") {
           router.push("/HRManagement/Profile");
         } else if (data.user.role.name_en === "Employee") {
