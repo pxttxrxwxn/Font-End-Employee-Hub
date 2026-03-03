@@ -76,14 +76,49 @@ export default function Leave_Request() {
             reader.readAsDataURL(file)
         }
     }
-
+    const PUBLIC_HOLIDAYS = [
+        "2026-01-01",
+        "2026-01-02",
+        "2026-03-03",
+        "2026-04-06",
+        "2026-04-13",
+        "2026-04-14",
+        "2026-04-15",
+        "2026-05-01",
+        "2026-05-04",
+        "2026-06-01",
+        "2026-06-03",
+        "2026-07-28",
+        "2026-07-29",
+        "2026-08-12",
+        "2026-10-13",
+        "2026-10-23",
+        "2026-12-07",
+        "2026-12-10",
+        "2026-12-31",
+    ]
     const calculateDays = (start: string, end: string) => {
-        if (!start || !end) return "-"
-        const startDate = new Date(start)
-        const endDate = new Date(end)
-        const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-        return diffDays
+        if (!start || !end) return "-";
+        const startParts = start.split('T')[0].split('-');
+        const endParts = end.split('T')[0].split('-');
+        const startDate = new Date(Number(startParts[0]), Number(startParts[1]) - 1, Number(startParts[2]), 12, 0, 0);
+        const endDate = new Date(Number(endParts[0]), Number(endParts[1]) - 1, Number(endParts[2]), 12, 0, 0);
+        let workDaysCount = 0;
+        const currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+            const dayOfWeek = currentDate.getDay();
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isHoliday = PUBLIC_HOLIDAYS.includes(formattedDate);
+            if (!isWeekend && !isHoliday) {
+                workDaysCount++;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        return workDaysCount;
     }
 
     const closeModal = () => {
