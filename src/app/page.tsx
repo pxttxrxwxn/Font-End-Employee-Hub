@@ -34,9 +34,9 @@ function LoginContent() {
         localStorage.setItem("user", JSON.stringify(data.user));
         document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; Secure; SameSite=Strict`;
         if (data.user.role.name_en === "HR Management") {
-          router.push("/HRManagement/Profile");
+          router.replace("/HRManagement/Profile");
         } else if (data.user.role.name_en === "Employee") {
-          router.push("/Employees/Profile");
+          router.replace("/Employees/Profile");
         }
       } catch (err: unknown) {
         if (err instanceof Error) {

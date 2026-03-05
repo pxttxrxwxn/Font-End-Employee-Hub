@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname , useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { User, Clock, FileText, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../utils/api";
@@ -23,7 +23,6 @@ const menus = [
 
 export default function SidebarEmployees() {
   const pathname = usePathname();
-  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -40,11 +39,10 @@ export default function SidebarEmployees() {
   }, []);
   
   const handleLogout = async () => {
-    localStorage.removeItem('token');
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    document.cookie = "token=; path=/; max-age=0; Secure; SameSite=Strict";
-    router.replace('/');
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=Strict";
+    window.location.replace("/");
   };
   return (
     <aside className="h-screen w-72 bg-[#07234D] text-white sticky top-0">

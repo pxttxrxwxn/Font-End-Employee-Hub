@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname , useRouter} from "next/navigation";
+import { usePathname } from "next/navigation";
 import { User, Clock, Users, Trello, Shield, FileText, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiFetch } from "../utils/api";
@@ -25,15 +25,13 @@ const menus = [
 ];
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
   const handleLogout = async () => {
-    localStorage.removeItem('token');
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    document.cookie = "token=; path=/; max-age=0; Secure; SameSite=Strict";
-    router.replace('/');
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=Strict";
+    window.location.replace("/");
   };
   
   useEffect(() => {
