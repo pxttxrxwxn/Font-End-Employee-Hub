@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Montserrat, Prompt } from "next/font/google";
-import RefreshOnBack from './components/RefreshOnBack';
 import "./globals.css";
+import RefreshOnBack from './components/RefreshOnBack';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
